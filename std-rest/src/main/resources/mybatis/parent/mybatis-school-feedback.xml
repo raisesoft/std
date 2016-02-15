@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.school.dao.FeedbackDao">
+
+	<resultMap type="com.cd.bbh.parent.school.vo.FeedbackVO" id="feedbackvos" autoMapping="true">
+		<id column="feedbackid" property="feedbackid" jdbcType="BIGINT"/>
+		<collection property="items" fetchType="eager" javaType="java.util.ArrayList" autoMapping="true" ofType="com.cd.bbh.parent.school.vo.FeedbackItemVO" />
+	</resultMap>
+
+	<select id="searchFeedbacks" resultMap="feedbackvos" parameterType="java.util.Map">
+		select 
+			b.ID			as feedbackid,
+			a.FBNAME		as name,
+			a.INSTRUCTION	as summary,
+		    b.DTCREATE		as createDate,
+		    b.CREATEDBY		as createdBy,
+		    b.TCOMMENTS		as tcomments,
+		    b.PCOMMENTS		as pcomments,
+		    b.PSTAT			as pstat,
+		    b.DTCREATE		as createDate,
+		    u.NAME			as teacher,
+		    b.PSTAT			as status,
+		    d.ID			as feedbackItemid,
+		    c.SUBJECT		as subject,
+		    d.TSCORE		as score	    
+		from
+			TB_FEEDBACK a,
+			(select * from TB_FEEDBACK_RECORD where date_format(DTCREATE,'%Y-%m-%d') &lt;= date_format(#{endDate,jdbcType=TIMESTAMP},'%Y-%m-%d') limit #{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER}) b,
+			TB_FEEDBACK_ITEM c,
+			TB_FEEDBACK_ITEM_RECORD d,
+			TB_USER u
+		where b.PUPILID = #{pupilid,jdbcType=BIGINT}
+			and d.FEEDBACKITEMID=c.ID
+			and b.TEMPLATEID=a.ID
+			and d.FEEDBACKID=b.ID
+			and b.CREATEDBY=u.ID
+			and b.TSTAT = 'Y'
+	</select>
+	<select id="searchFeedback" resultMap="feedbackvos" parameterType="java.lang.Long">
+		select 
+			b.ID			as feedbackid,
+			a.FBNAME		as name,
+			a.INSTRUCTION	as summary,
+		    b.DTCREATE		as createDate,
+		    b.CREATEDBY		as createdBy,
+		    b.TCOMMENTS		as tcomments,
+		    b.PCOMMENTS		as pcomments,
+		    b.PSTAT			as pstat,
+		    b.DTCREATE		as createDate,
+		    u.NAME			as teacher,
+		    b.PSTAT			as status,
+		    d.ID			as feedbackItemid,
+		    c.SUBJECT		as subject,
+		    d.TSCORE		as score	 
+		from
+			TB_FEEDBACK a,
+			TB_FEEDBACK_RECORD b,
+			TB_FEEDBACK_ITEM c,
+			TB_FEEDBACK_ITEM_RECORD d,
+			TB_USER u
+		where 
+			b.ID = #{feedbackid,jdbcType=BIGINT}
+			and d.FEEDBACKITEMID=c.ID
+			and b.TEMPLATEID=a.ID
+			and d.FEEDBACKID=b.ID
+			and b.CREATEDBY=u.ID
+			and b.TSTAT = 'Y'
+	</select>
+	<update id="updateFeedback" parameterType="java.util.Map">
+		update 
+			TB_FEEDBACK_RECORD
+		set
+			PCOMMENTS = #{comments,jdbcType=VARCHAR},
+			PSTAT = 'Y'
+		where 
+			ID = #{feedbackid,jdbcType=BIGINT}
+	</update>
+</mapper>

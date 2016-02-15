@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.school.app.dao.SchoolCourseRecordDao">
+	<select id="selectCourseRecord" resultType="com.cd.bbh.school.app.vo.CourseRecord">
+		select
+			cr.ID		as id,
+			c.NAME		as course,
+			cl.NAME		as classVO,
+			t.NAME		as teacher,
+			cr.DTBEGIN	as beginDate,
+			cr.DTFINISH	as finishDate,
+			cr.DTCREATE	as createDate,
+			u.NAME 		as createdUser
+ 		from 
+ 			TB_COURSE_RECORD cr,
+ 			TB_COURSE c,
+ 			TB_CLASS cl,
+ 			TB_USER t,
+ 			TB_USER u
+ 		where
+ 			cr.TEACHERID = #{teacherId, jdbcType=BIGINT} and
+ 			cr.COURSEID = c.ID and
+ 			cr.CLASSID = cl.ID and
+ 			cr.TEACHERID = t.ID and
+ 			u.ID = cr.CREATEDBY and
+ 			cr.DTBEGIN &gt; #{beginDate, jdbcType=TIMESTAMP} and
+ 			cr.DTFINISH &lt; #{finishDate, jdbcType=TIMESTAMP}
+ 		order by
+			DTBEGIN ASC
+ 			
+	</select>
+</mapper>

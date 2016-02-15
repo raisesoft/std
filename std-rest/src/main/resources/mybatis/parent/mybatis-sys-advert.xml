@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cd.bbh.parent.sys.dao.AdvertDao">
+	<resultMap id="adverts" type="com.cd.bbh.parent.sys.vo.AdvertVO" autoMapping="true"/>
+	<sql id="columns"> 
+		o.ID			as advertid, 
+		o.NAME			as name, 
+		o.LOCATION		as location, 
+		o.IMGPOP		as adimg, 
+		o.ORIPRICE		as originalPrice, 
+		o.CURRPRICE		as currPrice, 
+		o.PHONE			as phone, 
+		o.DTBEGIN		as begin, 
+		o.DTEND			as end, 
+		o.SCORE			as evaluate, 
+		o.REMARK		as comments, 
+		o.STAT			as stat, 
+		o.CITYID		as cityid,
+		c.NAME 			as cityname
+	</sql>
+
+	<select id="selectAdvert" parameterType="java.lang.Long" resultMap="adverts">
+		select
+			<include refid="columns" />
+		from 
+			TB_OFFER o,
+			TB_CITY c
+		where 
+			c.ID = o.CITYID
+			and o.ID = #{id,jdbcType=BIGINT}
+	</select>
+
+	<select id="selectAdverts" parameterType="java.util.Map" resultMap="adverts">
+		select
+			<include refid="columns" />
+		from 
+			TB_OFFER o,
+			TB_CITY c
+		where 
+			c.ID = o.CITYID
+			and now() between o.DTBEGIN and o.DTEND
+			and c.NAME like concat('%', #{cityname, jdbcType=VARCHAR}, '%')
+		order by 
+			o.SCORE, o.CURRPRICE 
+		limit 
+			#{page, jdbcType=INTEGER}, #{pagesize, jdbcType=INTEGER}
+	</select>
+	
+	<select id="selectAdvertsByName" parameterType="java.util.Map" resultMap="adverts">
+		select
+			<include refid="columns" />
+		from 
+			TB_OFFER o,
+			TB_CITY c
+		where 
+			c.ID = o.CITYID
+			and c.NAME like concat('%', #{name, jdbcType=VARCHAR}, '%') 
+			and now() between o.DTBEGIN and o.DTEND
+		order 
+			by o.SCORE, o.CURRPRICE 
+		limit 
+			#{page, jdbcType=BIGINT}, #{pagesize, jdbcType=BIGINT}
+	</select>
+</mapper>

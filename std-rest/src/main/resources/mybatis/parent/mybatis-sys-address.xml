@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.sys.dao.AddressDao">
+	<select id="selectAddrByCity" resultType="com.cd.bbh.parent.sys.vo.AddressVO" parameterType="java.lang.String">
+		select 
+			c.ID		as countryid,
+		    c.NAME		as country,
+		    p.ID 		as provinceid,
+		    p.NAME		as province,
+			ci.ID 		as cityid,
+		    ci.NAME 	as city
+		from
+			TB_COUNTRY c,
+		    TB_PROVINCE p,
+		    TB_CITY ci
+		where
+			p.COUNTRYID = c.ID
+			and ci.PROVINCEID = p.ID
+			ci.NAME = #{city, jdbcType=VARCHAR}
+	</select>
+	<select id="selectAddrByCounty" resultType="com.cd.bbh.parent.sys.vo.AddressVO" parameterType="java.lang.String">
+		select 
+			c.ID		as countryid,
+		    c.NAME		as country,
+		    p.ID 		as provinceid,
+		    p.NAME		as province,
+			ci.ID 		as cityid,
+		    ci.NAME 	as city,
+		    co.ID		as countyid,
+		    co.NAME		as county
+		from
+			TB_COUNTRY c,
+		    TB_PROVINCE p,
+		    TB_CITY ci,
+		    TB_COUNTY co
+		where
+			p.COUNTRYID = c.ID
+			and ci.PROVINCEID = p.ID
+			and co.CITYID = ci.ID
+			and co.NAME = #{county, jdbcType=VARCHAR}
+	</select>
+</mapper>

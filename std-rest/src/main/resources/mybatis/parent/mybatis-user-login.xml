@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cd.bbh.parent.login.dao.LoginDao">
+	<select id="selectUserByUnique" resultType="com.cd.bbh.parent.login.vo.LoginInfoVO" parameterType="java.lang.String">
+		select 
+			u.ID 		as userid, 
+			u.NAME		as username, 
+			u.PHONE		as account, 
+			u.EMAIL		as email, 
+			u.PASS		as password, 
+			u.IMGHEAD	as headimage, 
+			u.STAT		as state, 
+			p.DEVICENO 	as imei,
+			p.STAT		as auth
+		from 
+			TB_USER u
+		join TB_PARENT p on p.ID = u.ID
+		where 
+			u.PHONE = #{column,jdbcType=VARCHAR} 
+			or u.EMAIL = #{column,jdbcType=VARCHAR}
+	</select>
+	<select id="selectUser" resultType="com.cd.bbh.parent.login.vo.LoginInfoVO" parameterType="java.lang.Long">
+		select 
+			u.ID 		as userid, 
+			u.NAME		as username, 
+			u.PHONE		as account, 
+			u.EMAIL		as email, 
+			u.PASS		as password, 
+			u.IMGHEAD	as headimage, 
+			u.STAT		as state, 
+			p.ID		as parentid,
+			p.DEVICENO 	as imei,
+			p.STAT		as auth
+		from 
+			TB_USER u
+		join TB_PARENT p on p.ID = u.ID
+		where 
+			u.ID = #{userid, jdbcType=BIGINT}
+	</select>
+	<select id="checkUserExists" resultType="java.lang.Integer" parameterType="java.lang.String">
+		select 
+			count(u.ID)
+		from 
+			TB_USER u 
+		left join 
+			TB_PARENT p on u.ID = p.ID
+		where 
+		 	(u.PHONE = #{column,jdbcType=VARCHAR} or u.EMAIL = #{column,jdbcType=VARCHAR})	
+	</select>
+	
+	<insert id="insertUser" parameterType="java.util.Map">
+		insert into TB_USER (ROLEID, PHONE, PASS, ISINITPASS, STAT) 
+		values (
+			#{roleid,jdbcType=BIGINT},
+			#{cellphone,jdbcType=VARCHAR},
+			#{password,jdbcType=VARCHAR},
+			'N', 
+			#{userstat,jdbcType=VARCHAR});
+			
+		insert into TB_PARENT (ID, DEVICENO,STAT) 
+		values (
+			(SELECT ID FROM TB_USER WHERE PHONE=#{cellphone,jdbcType=VARCHAR}),
+			#{device,jdbcType=VARCHAR},
+			#{parentstat,jdbcType=VARCHAR}
+		);
+	</insert>
+	
+	<update id="updatePassword" parameterType="java.util.Map">
+		update 
+			TB_USER 
+		set 
+			PASS = #{password,jdbcType=VARCHAR}, 
+			UPDATEDBY = #{userid,jdbcType=BIGINT} 
+		where 
+			ID = #{userid,jdbcType=VARCHAR}
+	</update>
+	
+	<insert id="insertParent" parameterType="java.util.Map">
+		insert into TB_PARENT (ID, DEVICENO,STAT) 
+		values (
+			(SELECT ID FROM TB_USER WHERE PHONE=#{cellphone,jdbcType=VARCHAR}),
+			#{device,jdbcType=VARCHAR},
+			#{parentstat,jdbcType=VARCHAR}
+		);
+	</insert>
+	<update id="updateDeviceNo" parameterType="java.util.Map">
+		update 
+			TB_PARENT 
+		set 
+			DEVICENO = #{imei,jdbcType=VARCHAR}
+		where 
+			ID = #{userid,jdbcType=VARCHAR}
+	</update>
+</mapper>

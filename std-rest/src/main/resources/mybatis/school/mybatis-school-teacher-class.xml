@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.school.app.dao.SchoolTeacherClassDao">
+<select id="selectClassByTeacher" resultType="com.cd.bbh.school.app.vo.ClassSimple">
+	SELECT 
+    	tc.CLASSID as id,
+    	c.NAME as name
+	FROM
+    	TB_TEACHER_CLASS_REL tc
+    JOIN TB_CLASS c ON tc.CLASSID = c.ID
+	WHERE
+    	tc.TEACHERID = #{teacherId,  jdbcType=BIGINT};
+</select>
+<select id="selectClassBySchool" resultType="com.cd.bbh.school.app.vo.ClassSimple">
+	SELECT 
+    	ID AS id, NAME AS name
+	FROM
+    	TB_CLASS
+	WHERE
+    	SCHOOLID = #{schoolId, jdbcType=BIGINT}
+</select>
+<select id="selectClassIdBySchool" resultType="java.lang.String">
+	SELECT 
+    	ID
+	FROM
+    	TB_CLASS
+	WHERE
+    	SCHOOLID = #{schoolId, jdbcType=BIGINT}
+</select>
+<select id="selectSchoolIdByTeacher"  resultType="java.lang.Long">
+	select 
+    	SCHOOLID
+	from
+    	TB_TEACHER
+	where
+    	id = #{teacherId, jdbcType=BIGINT};
+</select>
+<select id="selectAgentIdBySchool"  resultType="java.lang.Long">
+	select 
+    	AGENTID
+	from
+    	TB_SCHOOL
+	where
+    	ID = #{schoolId, jdbcType=BIGINT};
+</select>
+<select id="selectUserNameById" resultType="java.lang.String">
+	SELECT 
+    	u.NAME
+	FROM
+    	TB_USER u
+	WHERE
+    	u.ID = #{id, jdbcType=BIGINT}
+</select>
+<select id="selectStudentClassSchool" resultType="com.cd.bbh.school.app.vo.StudentClassSchool">
+	SELECT 
+    	p.ID AS id,
+    	p.CLASSID AS classId, 
+    	p.SCHOOLID AS schoolId
+	FROM
+    	TB_PUPIL p
+	WHERE
+    	p.id IN (
+    <foreach collection="ids" item="id" separator=",">
+    	#{id}
+    </foreach>
+    	);
+</select>
+</mapper>

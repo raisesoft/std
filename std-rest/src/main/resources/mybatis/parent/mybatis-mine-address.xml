@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.mine.dao.AddrDao">
+	<sql id="columns">
+		ID			as id, 
+		COUNTRYID	as countryid, 
+		PROVINCEID	as provinceid, 
+		CITYID		as cityid, 
+		COUNTYID	as countyid, 
+		ADDR		as addr, 
+		POSTCODE	as postcode, 
+		PHONE		as phone, 
+		DTCREATE	as dtcreate, 
+		CREATEDBY	as createdby, 
+		PARENTID	as parentid, 
+		ISDEFAULT	as isdefault, 
+		RECEIVER	as receiver
+	</sql>
+	
+	<select id="searchMyDefaultAddress" resultType="com.cd.bbh.parent.mine.model.Address" parameterType="java.lang.Long">
+		select 
+			<include refid="columns"/>
+		from 
+			TB_ADDRESS
+		where 
+			PARENTID = #{parentid,jdbcType=BIGINT} 
+			and ISDEFAULT='Y'
+	</select>
+	<select id="searchMyAddress" resultType="com.cd.bbh.parent.mine.model.Address" parameterType="java.lang.Long">
+		select 
+			<include refid="columns"/>
+		from 
+			TB_ADDRESS
+		where 
+			PARENTID = #{parentid,jdbcType=BIGINT}
+	</select>
+	<select id="search" resultType="com.cd.bbh.parent.mine.model.Address" parameterType="java.lang.Long">
+		select 
+			<include refid="columns"/>
+		from 
+			TB_ADDRESS
+		where 
+			ID = #{id,jdbcType=BIGINT}
+	</select>
+	<delete id="remove" parameterType="java.lang.Long">
+		delete from TB_ADDRESS where ID = #{id,jdbcType=BIGINT}
+	</delete>
+	<insert id="add" parameterType="com.cd.bbh.parent.mine.model.Address" useGeneratedKeys="true" keyProperty="id">
+		insert into TB_ADDRESS (ID, COUNTRYID, PROVINCEID, CITYID, COUNTYID, ADDR, POSTCODE, PHONE, DTCREATE, CREATEDBY, PARENTID, ISDEFAULT,RECEIVER)
+		values (	
+			#{id,jdbcType=BIGINT}, 
+			#{countryid,jdbcType=BIGINT}, 
+			#{provinceid,jdbcType=BIGINT},
+			#{cityid,jdbcType=BIGINT}, 
+			#{countyid,jdbcType=BIGINT}, 
+			#{addr,jdbcType=VARCHAR},
+			#{postcode,jdbcType=VARCHAR}, 
+			#{phone,jdbcType=VARCHAR}, 
+			#{dtcreate,jdbcType=TIMESTAMP},
+			#{createdby,jdbcType=VARCHAR}, 
+			#{parentid,jdbcType=BIGINT}, 
+			#{isdefault,jdbcType=VARCHAR}, 
+			#{receiver,jdbcType=VARCHAR}
+		)
+	</insert>
+	<update id="update" parameterType="com.cd.bbh.parent.mine.model.Address">
+		update 
+			TB_ADDRESS
+		set 
+			COUNTRYID = #{countryid,jdbcType=BIGINT},
+			PROVINCEID = #{provinceid,jdbcType=BIGINT},
+			CITYID = #{cityid,jdbcType=BIGINT},
+			COUNTYID = #{countyid,jdbcType=BIGINT},
+			ADDR = #{addr,jdbcType=VARCHAR},
+			POSTCODE = #{postcode,jdbcType=VARCHAR},
+			PHONE = #{phone,jdbcType=VARCHAR},
+			DTCREATE = #{dtcreate,jdbcType=TIMESTAMP},
+			CREATEDBY = #{createdby,jdbcType=VARCHAR},
+			ISDEFAULT = #{isdefault,jdbcType=VARCHAR},
+			PARENTID = #{parentid,jdbcType=BIGINT},
+			RECEIVER= #{receiver,jdbcType=VARCHAR}
+		where 
+			ID = #{id,jdbcType=BIGINT}
+	</update>
+</mapper>

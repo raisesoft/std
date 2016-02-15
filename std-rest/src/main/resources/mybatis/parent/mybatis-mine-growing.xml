@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.mine.dao.GrowingDao">
+	<resultMap type="com.cd.bbh.parent.mine.vo.GrowingVO" id="growing_record" autoMapping="true">
+		<id column="growid" property="growid" jdbcType="BIGINT" />
+		<collection property="medias" fetchType="eager" javaType="java.util.ArrayList" ofType="com.cd.bbh.parent.mine.vo.MediaItemVO"  autoMapping="true"/>
+	</resultMap>
+	<select id="searchGrowingRecordByChildid" resultMap="growing_record">
+		select 
+			cg.ID				as growid,
+		    cg.DESCRIPTION		as description,
+		    cg.WEIGHT			as weight,
+		    cg.HEIGHT			as height,
+		    cg.ICON				as icon,
+		    cg.CREATOR			as creator,
+		    cg.DTCREATE			as createDate,
+		    cg.RECORDTYPE		as recordType,
+		    cg.DTSHOOT			as shootDate,
+		    cg.COMMENTS			as comments,
+		    mi.ID				as itemid,
+		    mi.MEDIAPATH		as mediaPath,
+		    mi.MEDIATYPE		as mediaType,
+		    mi.THUMBNAILPATH	as thumbnailPath
+		from 
+		    (select 
+			    ID, 
+			    DESCRIPTION, 
+			    WEIGHT, 
+			    HEIGHT, 
+			    ICON, 
+			    CREATOR,
+			    case RECORDTYPE
+			    	when 'V' then DTSHOOT
+			    	when 'P' then DTSHOOT
+			    	when 'G' then DTCREATE
+			    	when 'T' then DTCREATE
+			    end as DTCREATE,
+			    RECORDTYPE,
+			    DTSHOOT,
+			    COMMENTS
+		    from 
+		    	TB_CHILD_GROWING 
+		    where 
+		    	CHILDID = #{childid, jdbcType=BIGINT} 
+		    	and IFNULL(DTSHOOT, DTCREATE) &lt;= #{searchDate, jdbcType=TIMESTAMP}
+		    order by 
+				DTCREATE desc
+		    limit 
+		    	#{page, jdbcType=INTEGER}, #{pagesize, jdbcType=INTEGER}
+		    ) cg 
+		left join 
+			TB_MEDIA_ITEM mi on cg.ID = mi.GROWINGID
+		order by 
+			createDate desc
+	</select>
+
+	<insert id="insertGrowingRecord" parameterType="com.cd.bbh.parent.mine.vo.GrowingVO" useGeneratedKeys="true" keyProperty="growid">
+		insert into TB_CHILD_GROWING
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="childid != null">
+				CHILDID,
+			</if>
+			<if test="description != null">
+				DESCRIPTION,
+			</if>
+			<if test="weight != null">
+				WEIGHT,
+			</if>
+			<if test="height != null">
+				HEIGHT,
+			</if>
+			<if test="icon != null">
+				ICON,
+			</if>
+			<if test="creator != null">
+				CREATOR,
+			</if>
+			<if test="recordType != null">
+				RECORDTYPE,
+			</if>
+			<if test="shootDate != null">
+				DTSHOOT,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="childid != null">
+				#{childid,jdbcType=BIGINT},
+			</if>
+			<if test="description != null">
+				#{description,jdbcType=VARCHAR},
+			</if>
+			<if test="weight != null">
+				#{weight,jdbcType=INTEGER},
+			</if>
+			<if test="height != null">
+				#{height,jdbcType=INTEGER},
+			</if>
+			<if test="icon != null">
+				#{icon,jdbcType=VARCHAR},
+			</if>
+			<if test="creator != null">
+				#{creator,jdbcType=VARCHAR},
+			</if>
+			<if test="recordType != null">
+				#{recordType,jdbcType=VARCHAR},
+			</if>
+			<if test="shootDate != null">
+				#{shootDate,jdbcType=TIMESTAMP},
+			</if>
+		</trim>
+	</insert>
+
+	<insert id="insertGrowMediaItems" parameterType="java.util.List">
+		insert into TB_MEDIA_ITEM(MEDIAPATH, MEDIATYPE, THUMBNAILPATH, GROWINGID, CREATORID)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">  
+        ( 
+	        #{item.mediaPath,jdbcType=VARCHAR},
+			#{item.mediaType,jdbcType=VARCHAR},
+			#{item.thumbnailPath,jdbcType=VARCHAR},
+			#{item.growingid,jdbcType=BIGINT},
+			#{item.itemCreatorid,jdbcType=BIGINT}
+		)  
+    	</foreach>  
+	</insert>
+	<update id="updateGrowComments">
+		update
+			TB_CHILD_GROWING
+		set
+			COMMENTS = #{comments, jdbcType=VARCHAR}
+		where
+			ID = #{growingid, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- <select id="searchGrowingBasic" parameterType="java.util.Map" resultMap="growing_record">
+		select 
+			cg.ID				as growid,
+		    cg.DESCRIPTION		as description,
+		    cg.WEIGHT			as weight,
+		    cg.HEIGHT			as height,
+		    cg.ICON				as icon,
+		    cg.COMMENTS			as comments,
+		    cg.CREATOR			as creator,
+		    cg.DTCREATE			as createDate,
+		    cg.RECORDTYPE		as recordType,
+		    cg.DTSHOOT			as shootDate,
+		    mi.ID				as itemid,
+		    mi.MEDIAPATH		as mediaPath,
+		    mi.MEDIATYPE		as mediaType,
+		    mi.THUMBNAILPATH	as thumbnailPath
+		from 
+		    (select 
+			    ID, 
+			    DESCRIPTION, 
+			    WEIGHT, 
+			    HEIGHT, 
+			    ICON, 
+			    CREATOR,
+			    case RECORDTYPE
+			    	when 'V' then DTSHOOT
+			    	when 'P' then DTSHOOT
+			    	when 'G' then DTCREATE
+			    	when 'T' then DTCREATE
+			    end as DTCREATE,
+			    RECORDTYPE,
+			    DTSHOOT,
+			    COMMENTS
+		    from 
+		    	TB_CHILD_GROWING 
+		    where 
+		    	CHILDID = #{childid, jdbcType=BIGINT} 
+		    	and IFNULL(DTSHOOT, DTCREATE) &lt;= #{searchDate, jdbcType=TIMESTAMP}
+		    order by 
+				DTCREATE desc
+		    limit 
+		    	#{page, jdbcType=INTEGER}, #{pagesize, jdbcType=INTEGER}
+		    ) cg 
+		left join 
+			TB_MEDIA_ITEM mi on cg.ID = mi.GROWINGID
+		order by 
+			createDate desc
+	</select> -->
+</mapper>

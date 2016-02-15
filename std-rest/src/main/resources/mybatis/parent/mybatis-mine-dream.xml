@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.mine.dao.DreamDao">
+	<resultMap id="BaseResultMap" type="com.cd.bbh.parent.mine.model.Dream">
+		<id column="DREAMID" property="dreamid" jdbcType="BIGINT" />
+		<result column="PARENTID" property="parentid" jdbcType="BIGINT" />
+		<result column="VOUCHER" property="voucher" jdbcType="TIMESTAMP" />
+		<result column="CREATEDBY" property="createdby" jdbcType="BIGINT" />
+		<result column="DTCREATE" property="dtcreate" jdbcType="TIMESTAMP" />
+		<result column="CHILDID" property="childid" jdbcType="BIGINT" />
+		<result column="STAT" property="stat" jdbcType="VARCHAR" />
+		<result column="DTSIGN" property="dtsign" jdbcType="TIMESTAMP" />
+		<association property="cargo" javaType="com.cd.bbh.parent.mine.model.Cargo">
+			<id column="CARGOID" property="cargoid" jdbcType="BIGINT" />
+			<result column="NAME" property="name" jdbcType="VARCHAR" />
+			<result column="CATID" property="catid" jdbcType="BIGINT" />
+			<result column="ORIPRICE" property="oriprice" jdbcType="REAL" />
+			<result column="CURRPRICE" property="currprice" jdbcType="REAL" />
+			<result column="REMARK" property="remark" jdbcType="VARCHAR" />
+			<result column="CNTREP" property="cntrep" jdbcType="DECIMAL" />
+			<result column="CAGROSTAT" property="stat" jdbcType="VARCHAR" />
+			<result column="CAGROVOUCHER" property="voucher" jdbcType="REAL" />
+			<result column="CATEGORY" property="category" jdbcType="VARCHAR" />
+			<result column="PAYTYPE" property="paytype" jdbcType="VARCHAR" />
+			<result column="IMGCARGO" property="imgcargo" jdbcType="VARCHAR" />
+		</association>
+	</resultMap>
+
+	<select id="searchDreams" resultMap="BaseResultMap" parameterType="java.lang.Long">
+		select 
+			d.ID DREAMID, d.PARENTID, d.CREATEDBY, d.DTCREATE, d.CHILDID, d.STAT, d.DTSIGN, m.VOUCHER,
+			c.ID CARGOID, c.NAME, c.ORIPRICE, c.CURRPRICE, c.REMARK, c.CNTREP, c.STAT CAGROSTAT, c.VOUCHER CAGROVOUCHER, c.CATEGORY, c.PAYTYPE, c.IMGCARGO
+		from TB_DREAM d, TB_CARGO c, TB_CHILD m
+		where c.ID = d.CARGOID and m.ID = d.CHILDID and d.STAT='C' and d.CHILDID = #{childid,jdbcType=BIGINT}
+	</select>
+	<select id="searchDreamHistory" resultMap="BaseResultMap" parameterType="java.lang.Long">
+		select 
+			d.ID DREAMID, d.PARENTID, d.CREATEDBY, d.DTCREATE, d.CHILDID, d.STAT, d.DTSIGN, m.VOUCHER,
+			c.ID CARGOID, c.NAME, c.ORIPRICE, c.CURRPRICE, c.REMARK, c.CNTREP, c.STAT CAGROSTAT, c.VOUCHER CAGROVOUCHER, c.CATEGORY, c.PAYTYPE, c.IMGCARGO
+		from TB_DREAM d, TB_CARGO c, TB_CHILD m
+		where c.ID = d.CARGOID and m.ID = d.CHILDID and d.STAT='S' and d.CHILDID = #{childid,jdbcType=BIGINT}
+	</select>
+	<delete id="remove" parameterType="java.lang.Long">
+		delete from TB_DREAM where ID = #{id,jdbcType=BIGINT}
+	</delete>
+	<insert id="add" parameterType="java.util.Map">
+		insert into TB_DREAM (CARGOID, PARENTID, CREATEDBY, DTCREATE, CHILDID, STAT, DTSIGN)
+		values (#{cargoid,jdbcType=BIGINT}, #{parentid,jdbcType=BIGINT}, #{parentid,jdbcType=BIGINT}, now(), #{childid,jdbcType=BIGINT}, 'C', now())
+	</insert>
+	<update id="update" parameterType="java.util.Map">
+		update TB_DREAM set STAT = #{stat,jdbcType=VARCHAR} where ID = #{dreamid,jdbcType=BIGINT}
+	</update>
+</mapper>

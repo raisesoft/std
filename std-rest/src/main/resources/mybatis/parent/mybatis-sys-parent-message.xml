@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.sys.dao.ParentMessageDao">
+	<select id="selectMessage" resultType="com.cd.bbh.parent.sys.vo.ParentMessage">
+		SELECT 
+			ms.ID AS id,
+			m.ID AS msgId,
+    		m.TITLE AS title,
+    		m.CONTENT AS content,
+    		ms.PUPILID AS childId,
+    		c.NAME AS childName,
+    		m.RELATION AS relation,
+    		m.DTCREATE AS createDate,
+    		u.NAME AS createUser,
+    		m.MSGTYPE AS msgType,
+    		m.ISCALLBACK AS isCallBack,
+    		ms.STATUS AS status
+    	FROM 	
+    		TB_MESSAGE m
+    	JOIN
+    		TB_USER u ON m.CREATEBY = u.ID
+    	LEFT JOIN
+    		TB_MESSAGE_STATUS ms ON m.ID = ms.MSGID
+    	LEFT JOIN
+    		TB_CHILD c ON ms.PUPILID = c.ID
+		WHERE
+		<choose>
+			<when test="search.userId != null">
+				(ms.USERID = #{search.userId, jdbcType=BIGINT}
+				OR m.ISCALLBACK = 'N'
+       			OR ms.PUPILID IN (SELECT 
+            		pc.CHILDID
+        		FROM
+            		TB_PARENT_CHILD pc
+        		WHERE
+            		pc.PARENTID = #{search.userId, jdbcType=BIGINT}))
+			</when>
+			<otherwise>
+				   m.ISCALLBACK = 'N' 
+			</otherwise>
+		</choose>
+    		
+        <if test="search.status != null">
+        	AND (ms.STATUS = #{search.status}
+        		OR ms.STATUS IS NULL)
+        </if>
+		ORDER BY m.DTCREATE DESC
+		<if test="search.pageSize > 0">
+			LIMIT #{search.start} , #{search.pageSize}
+		</if>
+	</select>
+	<update id="updateMessageStatus">
+		UPDATE TB_MESSAGE_STATUS 
+		SET 
+    		STATUS = #{status, jdbcType=VARCHAR}
+		WHERE
+    		ID = #{id, jdbcType=BIGINT};
+	</update>
+</mapper>

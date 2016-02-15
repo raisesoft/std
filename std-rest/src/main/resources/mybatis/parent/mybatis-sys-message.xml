@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.sys.dao.MessageDao">
+
+	<resultMap type="com.cd.bbh.parent.sys.vo.MessageUserVO" id="message_user">
+		<id column="regid" property="regid" jdbcType="VARCHAR"/>
+		<collection property="tags" fetchType="eager" javaType="java.util.ArrayList" autoMapping="true" ofType="com.cd.bbh.parent.sys.vo.MessageTagVO" />
+	</resultMap>
+	
+	<insert id="insertMessageTag" parameterType="java.util.List">
+		insert into TB_MSG_TAG(GRPNAME, GRPTYPE, REMARK)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">  
+		(
+			#{item.groupName, jdbcType=VARCHAR},
+			#{item.groupType, jdbcType=VARCHAR},
+			#{item.remark, jdbcType=VARCHAR}
+		)
+		</foreach>
+	</insert>
+	<insert id="insertMessageUser">
+		insert into TB_MSG_USER(REGID, USERID, STAT)
+		values
+		(
+			#{regid, jdbcType=VARCHAR},
+			#{userid, jdbcType=BIGINT},
+			#{stat, jdbcType=VARCHAR}
+		);
+		insert into TB_MSG_TAG_USER(GRPNAME,REGID,SYNC, STAT)
+		values
+		(
+			(select GRPNAME from TB_MSG_TAG where REMARK = #{cityname, jdbcType=VARCHAR}),
+			#{regid, jdbcType=VARCHAR},
+			'N',
+			#{stat, jdbcType=VARCHAR}
+		);
+	</insert>
+	<insert id="insertMessageTagUser" parameterType="java.util.Map">
+		insert into TB_MSG_TAG_USER(GRPNAME,REGID,SYNC, STAT)
+		values
+		(
+			(select GRPNAME from TB_MSG_TAG where REMARK = #{cityname, jdbcType=VARCHAR}),
+			#{regid, jdbcType=VARCHAR},
+			'N',
+			#{stat, jdbcType=VARCHAR}
+		);
+	</insert>
+	<insert id="insertMessageTagUsers" parameterType="java.util.List">
+		insert into TB_MSG_TAG_USER(GRPNAME,REGID,SYNC, STAT)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">  
+		(
+			#{item.groupName, jdbcType=VARCHAR},
+			#{item.regid, jdbcType=VARCHAR},
+			'N',
+			#{item.stat, jdbcType=VARCHAR}
+		)
+		</foreach>  
+	</insert>
+	
+	<select id="selectMessageUser" resultMap="message_user">
+		select 
+			mu.REGID		as regid,
+			mu.USERID		as userid,
+			mu.STAT			as stat,
+			mtu.GRPNAME		as 'group',
+			mtu.REMARK		as remark,
+			mtu.ID			as userTagid,
+			mtu.REGID 		as regid,
+			mtu.SYNC		as sync,
+			mtu.DTSYNC		as syncDate
+		from 
+			TB_MSG_USER mu
+		left join
+			(
+				select 
+					a.GRPNAME as GRPNAME, ID, REGID, SYNC, DTSYNC, STAT,OPERATION, REMARK 
+				from 
+					TB_MSG_TAG_USER a, TB_MSG_TAG b 
+				where 
+					a.GRPNAME = b.GRPNAME and b.GRPTYPE = #{groupType, jdbcType=VARCHAR}
+			) mtu on mu.REGID = mtu.REGID 
+		where
+			mu.REGID = #{regid, jdbcType=VARCHAR}
+	</select>
+	<select id="selectMessageUserByUserid" resultMap="message_user" parameterType="java.lang.Long">
+		select 
+			u.REGID			as regid,
+		    u.USERID		as userid,
+		    u.STAT			as stat,
+		    mt.GRPNAME		as 'group',
+		    mt.REMARK		as remark,
+		    mtu.ID			as userTagid,
+		    mtu.REGID 		as regid,
+		    mtu.sync		as sync,
+		    mtu.DTSYNC		as syncDate
+		from 
+			TB_MSG_USER u,
+			TB_MSG_TAG mt,
+			TB_MSG_TAG_USER mtu
+		where
+			mt.GRPNAME = mtu.GRPNAME
+			and u.REGID = mtu.REGID
+			and u.USERID = #{userid, jdbcType=VARCHAR}
+	</select>
+	
+	<update id="deleteMessageUserByRegid" parameterType="java.lang.String">
+		delete from  
+			TB_MSG_USER
+		where
+			REGID = #{regid, jdbcType=VARCHAR}
+	</update>
+	<update id="deleteMessageUserTagByRegid" parameterType="java.lang.String">
+		update
+			TB_MSG_TAG_USER
+		set
+			OPERATION = 'D',
+			SYNC = 'N'
+		where
+			REGID = #{regid, jdbcType=VARCHAR}
+	</update>
+	<update id="deleteMessageUserTagByid" parameterType="java.lang.Long">
+		update 
+			TB_MSG_TAG_USER
+		set
+			OPERATION = 'D',
+			SYNC = 'N'
+		where
+			ID = #{userTagid, jdbcType=BIGINT}
+	</update>
+	<update id="updateMessageUser">
+		update 
+			TB_MSG_USER
+		set
+			USERID = #{userid, jdbcType=BIGINT}
+		where
+			REGID = #{regid, jdbcType=VARCHAR}
+	</update>
+
+	<select id="selectNotGroupMessageUserByTypeAndUserid" resultType="java.util.Map">
+		select 
+			<if test=" groupType == 'SCHOOL'.toString()">
+			distinct(mu.SCHOOLID)  	as schoolid,
+			mu.SCHOOLNAME 			as schoolName, 
+			</if>
+			<if test=" groupType == 'CLASS'.toString()">
+			distinct(mu.CLASSID) 	as classid,
+			mu.SCHOOLID  			as schoolid,
+			mu.CLASSNAME 			as className, 
+			</if>
+			mu.AGENTID 				as agentid, 
+		    mu.GRPNAME 				as groupName, 
+		    mtu.GRPNAME 			as 'group' 
+		from 
+			( select 
+				p.SCHOOLID 	as SCHOOLID, 
+				p.CLASSID 	as CLASSID, 
+		        p.AGENTID 	as AGENTID,
+		        s.NAME 		as SCHOOLNAME, 
+		        c.NAME 		as CLASSNAME,
+		        mt.GRPNAME	as GRPNAME
+			from 
+				TB_PARENT_CHILD pc,
+		        TB_USER s, 
+		        TB_CLASS c, 
+		        TB_PUPIL p
+		    left join TB_MSG_TAG mt on 
+			    <if test=" groupType == 'SCHOOL'.toString()">
+			   	p.SCHOOLID = substring_index(mt.GRPNAME, '_', -1) 
+				</if>
+				<if test=" groupType == 'CLASS'.toString()">
+				p.CLASSID = substring_index(mt.GRPNAME, '_', -1)
+				</if>
+		    	and mt.GRPTYPE= #{groupType, jdbcType=VARCHAR}
+		    where 
+				pc.CHILDID = p.ID 
+		        and p.SCHOOLID = s.ID 
+		        and c.ID = p.CLASSID 
+		        and pc.PARENTID = #{userid, jdbcType=BIGINT} ) mu 
+		left join 
+			( select 
+				t2.GRPNAME, 
+				t2.REGID 
+			from 
+				TB_MSG_TAG_USER t2, 
+				TB_MSG_USER t1 
+			where 
+				t1.REGID = t2.REGID
+				and t1.REGID = #{regid, jdbcType=VARCHAR}
+				and GRPNAME like CONCAT('%', #{groupType, jdbcType=VARCHAR}, '%')) mtu on mtu.GRPNAME = mu.GRPNAME
+	</select>
+	
+	<select id="selectMessageUserByChild" parameterType="java.lang.Long" resultType="com.cd.bbh.parent.sys.vo.MessageUserVO">
+		select
+			mu.REGID  as regid,
+			mu.STAT   as stat,
+			mu.USERID as userid
+		from
+		    TB_MSG_USER mu,
+			TB_PARENT_CHILD pc
+		where
+			mu.USERID = pc.PARENTID
+			and pc.CHILDID = #{child,jdbcType=BIGINT}
+	</select>
+	
+	<insert id="insertNotification" parameterType="com.cd.bbh.parent.sys.vo.NotificationVO">
+		insert into TB_NOTIFICATION (TITLE, <if test="messageId != null">MSGID, </if>ISALERT, MSGTYPE, PUSHTYPE, PUSHTAGS, CREATEDBY)
+		values(
+			#{title, jdbcType=VARCHAR},
+			<if test="messageId != null">
+			#{messageId, jdbcType=VARCHAR},
+			</if>
+			#{isAlert, jdbcType=VARCHAR},
+			#{msgType, jdbcType=VARCHAR},
+			#{pushType, jdbcType=VARCHAR},
+			#{pushTags, jdbcType=VARCHAR},
+			#{createdBy, jdbcType=BIGINT}
+		)
+	</insert>
+	<insert id="insertMessage" parameterType="com.cd.bbh.parent.sys.vo.MessageVO" useGeneratedKeys="true" keyProperty="messageId">
+		insert into TB_MESSAGE(TITLE, CONTENT, CREATEBY, MSGTYPE, ISCALLBACK)
+		values (
+			#title:VARCHAR#,
+			#content:VARCHAR#,
+			#createdBy:NUMERIC#,
+			#msgType:VARCHAR#,
+			#isCallback:VARCHAR#
+		);
+	</insert>
+	<insert id="insertMessageStatus" parameterType="com.cd.bbh.parent.sys.vo.MessageVO">
+		insert into TB_MESSAGE_STATUS(MSGID, PUPILID, STATUS)
+		values (
+			#messageId:NUMERIC#,
+			#pupilId:NUMERIC#,
+			#status:VARCHAR#
+		);
+	</insert>
+</mapper>

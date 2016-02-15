@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cd.bbh.parent.mine.dao.ChildrenDao">
+	<resultMap id="BaseResultMap" type="com.cd.bbh.parent.mine.model.Child">
+		<id column="ID" jdbcType="BIGINT" property="id" />
+		<result column="IMGHEAD" jdbcType="VARCHAR" property="headimg" />
+		<result column="NAME" jdbcType="VARCHAR" property="name" />
+		<result column="NICKNAME" jdbcType="VARCHAR" property="nickname" />
+		<result column="AGE" jdbcType="INTEGER" property="age" />
+		<result column="GENDER" jdbcType="VARCHAR" property="gender" />
+		<result column="TOTALDOLLER" jdbcType="DECIMAL" property="totaldoller" />
+		<result column="WEEKDOLLER" jdbcType="DECIMAL" property="weekdoller" />
+		<result column="AVAILABLEDOLLER" jdbcType="DECIMAL" property="availabledoller" />
+		<result column="DTBIRTHDAY" jdbcType="TIMESTAMP" property="dtbirthday" />
+		<result column="CNTWORK" jdbcType="INTEGER" property="cntwork" />
+		<result column="STAT" jdbcType="VARCHAR" property="stat" />
+		<result column="VOUCHER" jdbcType="DECIMAL" property="voucher" />
+		<result column="BLOODTYPE" jdbcType="VARCHAR" property="bloodtype" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		ID, IMGHEAD, NAME, NICKNAME, AGE, GENDER, TOTALDOLLER, WEEKDOLLER, AVAILABLEDOLLER, DTBIRTHDAY, CNTWORK, STAT, VOUCHER, BLOODTYPE
+	</sql>
+
+	<select id="search" parameterType="java.lang.Long" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from TB_CHILD where ID = #{id,jdbcType=BIGINT}
+	</select>
+	
+	<select id="findMyChildren" parameterType="java.lang.Long" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from TB_CHILD c, TB_PARENT_CHILD pc where c.ID = pc.CHILDID AND pc.PARENTID = #{parentid,jdbcType=BIGINT}
+	</select>
+	
+	<select id="findStarChildren" resultType="com.cd.bbh.parent.mine.vo.ChildStarVO">
+		select
+			ID				as childid, 
+			IMGHEAD			as headimg, 
+			NICKNAME		as nickname, 
+			WEEKDOLLER		as weekdoller,  
+			DTBIRTHDAY		as birthday
+		from 
+			TB_CHILD c
+		<where>
+			DTBIRTHDAY between #{minBirthday, jdbcType=TIMESTAMP} and #{maxBirthday, jdbcType=TIMESTAMP}
+			<if test="condition != null">
+			and c.NICKNAME like CONCAT('%', #{condition, jdbcType=VARCHAR}, '%')
+			</if>
+		</where>
+		order by 
+			weekdoller desc, birthday asc
+		limit 
+			#{page, jdbcType=INTEGER}, #{pagesize, jdbcType=INTEGER}
+	</select>
+
+	<delete id="remove" parameterType="java.lang.Long">
+		delete from TB_CHILD_WORK where CHILDID = #{id,jdbcType=BIGINT};
+		delete from TB_CHILD_DEVICE where CHILDID = #{id,jdbcType=BIGINT};
+		delete from TB_CHILD_BASICINFO where CHILDID = #{id,jdbcType=BIGINT};
+		delete from TB_PARENT_CHILD where CHILDID= #{id,jdbcType=BIGINT};
+		delete from TB_CHILD_GROWING_COMMENTS where GROWINGID in (select ID from TB_CHILD_GROWING where CHILDID = #{id,jdbcType=BIGINT});
+		delete from TB_MEDIA_ITEM where GROWINGID in (select ID from TB_CHILD_GROWING where CHILDID = #{id,jdbcType=BIGINT});
+		delete from TB_CHILD_GROWING where CHILDID = #{id,jdbcType=BIGINT};
+		delete from TB_CHILD where ID = #{id,jdbcType=BIGINT};
+	</delete>
+
+	<insert id="add" parameterType="com.cd.bbh.parent.mine.model.Child" useGeneratedKeys="true" keyProperty="id">
+		insert into TB_CHILD (IMGHEAD, NAME, NICKNAME, AGE, GENDER, DTBIRTHDAY, BLOODTYPE, CREATEDBY, STAT, VOUCHER)
+		values (
+			#{headimg,jdbcType=VARCHAR}, 
+			#{name,jdbcType=VARCHAR}, 
+			#{nickname,jdbcType=VARCHAR}, 
+			#{age,jdbcType=INTEGER},
+			#{gender,jdbcType=VARCHAR}, 
+			#{dtbirthday,jdbcType=TIMESTAMP},
+			#{bloodtype,jdbcType=VARCHAR},
+			#{createdby,jdbcType=BIGINT},
+			'R',
+			0
+		)
+	</insert>
+	<insert id="addParentChild">
+		insert into TB_PARENT_CHILD (PARENTID, CHILDID, RELATION) 
+		values 
+		(
+			#{elderid, jdbcType=BIGINT}, 
+			#{childid, jdbcType=BIGINT},
+			#{relation, jdbcType=VARCHAR}
+		)
+	</insert>
+	<update id="update" parameterType="java.util.Map">
+		update 
+			TB_CHILD
+	<trim prefixOverrides=",">
+		<set>
+		<if	test="name != null">
+			NAME = #{name,jdbcType=VARCHAR},
+		</if>
+		<if	test="nickname != null">
+			NICKNAME = #{nickname,jdbcType=VARCHAR},
+		</if>
+		<if test="gender != null">
+			GENDER = #{gender,jdbcType=VARCHAR},
+		</if>
+		<if test="age != null">
+			AGE = #{age,jdbcType=INTEGER},
+		</if>
+		<if test="birthday != null">
+			DTBIRTHDAY = #{birthday,jdbcType=TIMESTAMP},
+		</if>
+		<if test="headimg != null">
+			IMGHEAD = #{headimg,jdbcType=VARCHAR},
+		</if>
+		<if test="bloodtype != null">
+			BLOODTYPE = #{bloodtype,jdbcType=VARCHAR}
+		</if>
+		</set>
+	</trim>
+		where 
+			ID = #{id,jdbcType=BIGINT}
+	</update>
+	<update id="updateByRealizeDream" parameterType="com.cd.bbh.parent.mine.model.Child">
+		update 
+			TB_CHILD 
+		set 
+			AVAILABLEDOLLER = #{availabledoller,jdbcType=DECIMAL}, 
+			VOUCHER = #{voucher,jdbcType=DECIMAL} 
+		where 
+			ID = #{id,jdbcType=BIGINT}
+	</update>
+	<select id="selectRelation" resultType="java.lang.String">
+		select
+			RELATION
+		from 
+			TB_PARENT_CHILD
+		where
+			CHILDID = #{childid, jdbcType=BIGINT} and PARENTID = #{parentid, jdbcType=BIGINT}
+	</select>
+	<select id="selectElders" resultType="java.util.Map">
+		select
+			pc.RELATION	as relation,
+			u.IMGHEAD	as headimage
+		from 
+			TB_USER u,
+			TB_PARENT_CHILD pc
+		where
+			pc.PARENTID = u.ID
+			and pc.CHILDID = #{childid, jdbcType=BIGINT} 
+	</select>
+</mapper>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.school.punch.dao.SchoolSyncDao">
+	<select id="selectClass" resultType="com.cd.bbh.school.punch.vo.ClassVO">
+		select
+			c.ID 			as id,
+			c.NAME 			as name,
+			c.BROADCAST		as broadcast
+		from
+			TB_CLASS c,
+			TB_PUNCH p
+		where
+			c.SCHOOLID = p.SCHOOLID
+			and p.PUNCHNO = #{punch, jdbcType=VARCHAR}
+			<if test="syncDate != null">
+				and c.DTCREATE &gt; #{syncDate, jdbcType=TIMESTAMP}
+			</if>
+	</select>
+	<select id="selectTeacher" resultType="com.cd.bbh.school.punch.vo.TeacherVO">
+		select
+			u.ID 		as id,
+			u.NAME		as name,
+			u.IMGHEAD	as headimg
+		from 
+			TB_USER u,
+			TB_PUNCH p,
+			TB_TEACHER t
+		where
+			t.ID = u.ID
+			and p.SCHOOLID = t.SCHOOLID
+			and p.PUNCHNO = #{punch, jdbcType=VARCHAR}
+			<if test="syncDate != null">
+				and t.DTCREATE &gt; #{syncDate, jdbcType=TIMESTAMP}
+			</if>
+	</select>
+	<select id="selectPupil" resultType="com.cd.bbh.school.punch.vo.PupilVO">
+		select
+			c.ID			as id,
+			c.NAME			as name,
+			c.IMGHEAD		as headimg,
+			pu.CARDNO		as cardNo,
+			pu.CLASSID		as classid
+		from
+			TB_PUPIL pu,
+			TB_PUNCH p,
+			TB_CHILD c
+		where
+			c.ID = pu.ID
+			and p.SCHOOLID = pu.SCHOOLID
+			and p.PUNCHNO = #{punch, jdbcType=VARCHAR}
+			<if test="syncDate != null">
+				and pu.DTCREATE &gt; #{syncDate, jdbcType=TIMESTAMP}
+			</if>		
+	</select>
+	<select id="selectParent" resultType="com.cd.bbh.school.punch.vo.ParentVO">
+		select 
+			pa.ID 			as id,
+			pc.RELATION 	as relation,
+			u.IMGHEAD		as headImg
+		from 
+			TB_PUNCH p,
+			TB_PUPIL pu,
+			TB_PARENT_CHILD pc,
+			TB_PARENT pa,
+			TB_USER u
+		where
+			pa.ID = u.ID
+			and pa.ID = pc.PARENTID
+			and pc.CHILDID = pu.ID
+			and pu.SCHOOLID = p.SCHOOLID
+			and p.PUNCHNO = #{punch, jdbcType=VARCHAR}
+			<if test="syncDate != null">
+				and pa.DTUPDATE &gt; #{syncDate, jdbcType=TIMESTAMP}
+			</if>		
+	</select>
+	<select id="selectRelation" resultType="com.cd.bbh.school.punch.vo.RelationVO">
+		select
+			pc.PARENTID 	as parentid,
+			pc.CHILDID 		as pupilid
+		from
+			TB_PUNCH p,
+			TB_PUPIL pu,
+			TB_PARENT_CHILD pc
+		where
+			pc.CHILDID = pu.ID
+			and pu.SCHOOLID = p.SCHOOLID
+			and p.PUNCHNO = #{punch, jdbcType=VARCHAR}
+			<if test="syncDate != null">
+				and pu.DTCREATE &gt; #{syncDate, jdbcType=TIMESTAMP}
+			</if>
+	</select>
+	
+	<select id="selectSchoolByPunch" parameterType="java.lang.String" resultType="java.lang.Long">
+		select
+			SCHOOLID
+		from 
+			TB_PUNCH
+		where
+			PUNCHNO = #{punchSerial, jdbcType=VARCHAR}
+	</select>
+</mapper>

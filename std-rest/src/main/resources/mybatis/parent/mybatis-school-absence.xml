@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.school.dao.AbsenceDao">
+	<resultMap type="com.cd.bbh.parent.school.vo.AbsenceVO" id="absence_map" autoMapping="true">
+		<result property="type" column="type" typeHandler="com.cd.bbh.common.enums.MybatisEnumHandler"/>
+		<result property="state" column="state" typeHandler="com.cd.bbh.common.enums.MybatisEnumHandler"/>
+	</resultMap>
+	<select id="selectAbsences" resultMap="absence_map">
+		select
+			ID				as id,
+			LEAVETIME		as leaveDate,
+		    BACKTIME		as backDate,
+		    CREATOR			as creator,
+		    REMARK			as remark,
+		    ABSENCETYPE		as 'type',	
+			STATE			as state,
+		    CONFIRMOR		as confirmor,
+		    DTCONFIRM		as confirmDate,
+		    APPLICANTID		as applicantid,
+		    ISAPPLIED		as isApplied
+		from 
+			TB_ABSENCE_RECORD
+		where
+			APPLICANTID = #{childid, jdbcType=BIGINT}
+			<if test="absenceDate != null">
+		    and date_format(#{absenceDate, jdbcType=TIMESTAMP}, '%Y-%m-%d') between date_format(LEAVETIME, '%Y-%m-%d') and date_format(BACKTIME, '%Y-%m-%d')
+			</if>
+		order by 
+			CONFIRMOR is null,
+			LEAVETIME desc
+	</select>
+	<select id="selectClassAndSchoolByPupil" resultType="java.util.Map" parameterType="java.lang.Long">
+		select
+			CLASSID		as classid,
+			SCHOOLID	as schoolid
+		from 
+			TB_PUPIL
+		where
+			ID = #{childid, jdbcType=BIGINT}
+	</select>
+	<select id="selectTeachers" resultType="java.util.Map" parameterType="java.lang.Long">
+		select
+			u.ID	as teacherid,
+			u.NAME	as name
+		from 
+			TB_PUPIL p,
+			TB_TEACHER t,
+			TB_USER u,
+			TB_TEACHER_CLASS_REL tcr
+		where
+			t.ID = u.ID
+			and tcr.TEACHERID = t.ID
+			and p.CLASSID = tcr.CLASSID
+			and	p.ID = #{childid, jdbcType=BIGINT}
+	</select>
+	<insert id="insertAbsence" parameterType="com.cd.bbh.parent.school.vo.AbsenceVO">
+		insert into TB_ABSENCE_RECORD (
+			APPLICANTID, APPLICANTTYPE, LEAVETIME, BACKTIME, ABSENCETYPE, REMARK, CREATOR, CLASSID, SCHOOLID, STATE, ISAPPLIED)
+		values (
+			#{applicantid, jdbcType=BIGINT},
+			'S',
+			#{leaveDate, jdbcType=TIMESTAMP},
+			#{backDate, jdbcType=TIMESTAMP},
+			#{type, typeHandler=com.cd.bbh.common.enums.MybatisEnumHandler},
+			#{remark, jdbcType=VARCHAR},
+			#{creator, jdbcType=VARCHAR},
+			#{classid, jdbcType=BIGINT},
+			#{schoolid, jdbcType=BIGINT},
+			#{state, typeHandler=com.cd.bbh.common.enums.MybatisEnumHandler},
+			'Y'
+			)
+	</insert>
+</mapper>

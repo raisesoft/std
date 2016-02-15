@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cd.bbh.parent.mine.dao.DeviceDao">
+	<select id="selectDevices" resultType="com.cd.bbh.parent.sys.vo.DeviceVO" parameterType="java.util.Map">
+		select 
+			ID			as	deviceid,
+		    NAME		as	name,
+		    USEINFO		as	useInfo,
+		    REMARK		as	remark,
+		    ORIPRICE	as	originalPrice,
+		    CURPRICE	as	currPrice,
+		    CNTREP		as	count,
+		    IMGPATHURL	as	image
+		from 
+			TB_DEVICE
+		limit #{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER}
+	</select>
+</mapper>

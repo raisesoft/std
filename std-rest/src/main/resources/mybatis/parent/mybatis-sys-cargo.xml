@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.mine.dao.CargoDao">
+	<resultMap id="BaseResultMap" type="com.cd.bbh.parent.mine.model.Cargo">
+		<id column="CARGOID" property="cargoid" jdbcType="BIGINT" />
+		<result column="NAME" property="name" jdbcType="VARCHAR" />
+		<result column="CATID" property="catid" jdbcType="BIGINT" />
+		<result column="ORIPRICE" property="oriprice" jdbcType="REAL" />
+		<result column="CURRPRICE" property="currprice" jdbcType="REAL" />
+		<result column="REMARK" property="remark" jdbcType="VARCHAR" />
+		<result column="CNTREP" property="cntrep" jdbcType="DECIMAL" />
+		<result column="CAGROSTAT" property="stat" jdbcType="VARCHAR" />
+		<result column="CAGROVOUCHER" property="voucher" jdbcType="FLOAT" />
+		<result column="CATEGORY" property="category" jdbcType="VARCHAR" />
+		<result column="PAYTYPE" property="paytype" jdbcType="VARCHAR" />
+		<result column="IMGCARGO" property="imgcargo" jdbcType="VARCHAR" />
+	</resultMap>
+	<select id="search" resultMap="BaseResultMap" parameterType="java.lang.Long">
+		select ID CARGOID, NAME, ORIPRICE, CURRPRICE, REMARK, CNTREP, STAT CAGROSTAT, VOUCHER CAGROVOUCHER, CATEGORY, PAYTYPE, IMGCARGO
+		from TB_CARGO where ID = #{cargoid,jdbcType=BIGINT}
+	</select>
+	<select id="searchAll" resultMap="BaseResultMap" parameterType="java.util.Map">
+		select ID CARGOID, NAME, ORIPRICE, CURRPRICE, REMARK, CNTREP, STAT CAGROSTAT, VOUCHER CAGROVOUCHER, CATEGORY, PAYTYPE, IMGCARGO
+		from TB_CARGO
+		<where>
+			<if test="category != null">
+				CATEGORY =#{category,jdbcType=VARCHAR}
+			</if>
+		</where>
+		limit #{page, jdbcType=INTEGER}, #{pagesize, jdbcType=INTEGER}
+	</select>
+
+	<select id="searchCargoByDreamId" resultType="java.util.Map" parameterType="java.lang.Long">
+		select c.CURRPRICE as currprice, c.CNTREP as cntrep, c.VOUCHER as voucher, d.CHILDID as childid, d.CARGOID as cargoid
+		from TB_DREAM d, TB_CARGO c where d.CARGOID=c.ID and d.ID = #{dreamid,jdbcType=BIGINT}
+	</select>
+	
+	<update id="updateCargoAmount" parameterType="java.util.Map">
+		update TB_CARGO set CNTREP=(CNTREP-#{amount,jdbcType=INTEGER}) where ID=#{cargoid, jdbcType=BIGINT}
+	</update>
+</mapper>

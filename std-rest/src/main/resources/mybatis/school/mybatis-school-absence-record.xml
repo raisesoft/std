@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.school.app.dao.AbsenceRecordDao">
+	<select id="selectAbsenceRecordList" resultType="com.cd.bbh.school.app.vo.AbsenceRecordVO">
+		SELECT 
+    		ar.ID AS id,
+    		ch.NAME AS applicantUser,
+    		ch.IMGHEAD AS imgHead,
+    		ar.APPLICANTTYPE AS applocantType,
+    		ar.LEAVETIME AS leaveTime,
+    		ar.BACKTIME AS backTime,
+    		ar.ABSENCETYPE AS absenceType,
+    		ar.ISCHARGE AS isChange,
+    		ar.REMARK AS remark,
+    		ar.DTCREATE AS createDate,
+    		ar.CREATOR AS createUser,
+    		ar.CONFIRMOR AS confirmUser,
+    		ar.DTCONFIRM AS confirmDate,
+    		<if test="search.userRoles == 'TEACHER'">
+    			c.NAME AS className,
+    		</if>
+    		s.NAME AS school,
+    		ar.STATE AS state,
+    		ar.ISAPPLIED AS isApplied
+		FROM
+    		TB_ABSENCE_RECORD ar
+        JOIN
+    		TB_USER s ON ar.SCHOOLID = s.ID
+    	<if test="search.userRoles == 'TEACHER'">
+    		JOIN
+    		TB_CHILD ch ON ar.APPLICANTID = ch.ID
+        LEFT JOIN
+    		TB_CLASS c ON ar.CLASSID = c.ID
+        JOIN
+    		TB_TEACHER_CLASS_REL tcr ON ar.CLASSID = tcr.CLASSID
+		WHERE
+    		tcr.TEACHERID = #{search.userId, jdbcType=BIGINT}
+    	</if>
+    	<if test="search.userRoles == 'SCHOOL'">
+    	JOIN
+    		TB_USER ch ON ar.APPLICANTID = ch.ID
+		WHERE
+    		ar.SCHOOLID = #{search.userId, jdbcType=BIGINT}
+    	</if>
+    		AND ar.LEAVETIME &gt;=  #{search.date, jdbcType=TIMESTAMP}
+    	<if test="search.isApplied != null">
+    		AND ar.ISAPPLIED = #{search.isApplied, jdbcType=VARCHAR}
+    	</if>
+    	<if test="search.state != null">
+    		AND ar.STATE = #{search.state, jdbcType=VARCHAR}
+    	</if>
+    	<if test="search.dataNum > 0">
+    		LIMIT #{search.start} , #{search.dataNum};
+    	</if>
+	</select>
+	<select id="selectApplicantTypeById" resultType="java.lang.String">
+		SELECT 
+    		ar.APPLICANTTYPE
+		FROM
+    		TB_ABSENCE_RECORD ar
+		WHERE
+    		ar.ID = #{id, jdbcType=BIGINT}
+	</select>
+	<insert id="insertAbsenceRecord">
+		INSERT INTO TB_ABSENCE_RECORD(
+			APPLICANTID,
+			APPLICANTTYPE,
+			LEAVETIME,
+			BACKTIME,
+			REMARK,
+			DTCREATE,
+			CREATOR,
+			CLASSID,
+			SCHOOLID,
+			ISAPPLIED)
+		VALUES
+		<foreach collection="ars" item="ar" separator=",">
+			(#{ar.applicantId, jdbcType=BIGINT},
+			#{ar.applicantType, jdbcType=VARCHAR},
+			#{ar.leaveTime, jdbcType=TIMESTAMP},
+			#{ar.backTime, jdbcType=TIMESTAMP},
+			#{ar.remark, jdbcType=VARCHAR},
+			#{ar.createDate, jdbcType=TIMESTAMP},
+			#{ar.createUser, jdbcType=VARCHAR},
+			#{ar.classId, jdbcType=BIGINT},
+			#{ar.schoolId, jdbcType=BIGINT},
+			#{ar.isApplied, jdbcType=VARCHAR})
+		</foreach>
+	</insert>
+	<update id="updateAbsenceRecord">
+		UPDATE TB_ABSENCE_RECORD ar
+		SET
+			ar.CONFIRMOR = #{data.user, jdbcType=VARCHAR},
+			ar.DTCONFIRM = #{data.date, jdbcType=TIMESTAMP},
+			ar.STATE = #{data.state, jdbcType=VARCHAR}
+		WHERE 
+			ar.ID = #{data.id, jdbcType=BIGINT}
+	</update>
+</mapper>

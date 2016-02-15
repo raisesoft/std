@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.tag.dao.MessageTagDao">
+	<select id="selectMessageTag" resultType="com.cd.bbh.tag.vo.MessageTag">
+		select
+			GRPNAME 	as 'group',
+			GRPTYPE		as type,
+			REMARK		as area
+		from
+			TB_MSG_TAG
+	</select>
+	<select id="selectMessageUserTag" resultType="com.cd.bbh.tag.vo.MessageUserTag">
+		select 
+			ID			as id,
+		    GRPNAME		as 'group',
+		    REGID		as regid,
+		    SYNC		as sync,
+		    DTSYNC		as syncDate,
+		    STAT		as userState,
+		    OPERATION	as syncOperation
+		from 
+			TB_MSG_TAG_USER
+		where
+			sync = 'N'
+	</select>
+	<update id="updateMessageUserTag" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=";">
+			update 
+				TB_MSG_TAG_USER 
+			set 
+				SYNC='Y' 
+			where 
+				id = ${item.id}
+		</foreach>
+	</update>
+	<delete id="deleteMessageUserTag" parameterType="java.util.List">
+		delete from TB_MSG_TAG_USER where ID in
+		<foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+			#{item, jdbcType=BIGINT}
+		</foreach>
+	</delete>
+	
+	<select id="selectMessageByStat" resultType="com.cd.bbh.tag.vo.Message">
+		select 
+			ID			as id,
+		    STAT		as state,
+		    TITLE		as title,
+		    LEVEL		as level,
+		    MSGID		as msgId,
+		    ISALERT		as isAlert,
+		    MSGTYPE		as msgType,
+		    PUSHTYPE	as pushType,
+		    PUSHTAGS	as pushTags,
+		    DTCREATE	as sendDate
+		from 
+			TB_NOTIFICATION
+		where 
+			STAT = #{state, jdbcType=VARCHAR}
+	</select>
+	
+	<update id="updateMessage">
+		update
+			TB_NOTIFICATION
+		set 
+			STAT = #{state, jdbcType=VARCHAR} 
+		where   
+			id = #{id, jdbcType=BIGINT} 
+	</update>
+</mapper>

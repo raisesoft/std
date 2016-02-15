@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.school.dao.ShuttleDao">
+
+	<select id="searchShuttles" resultType="com.cd.bbh.parent.school.vo.Shuttle">	
+		SELECT
+			sr.CHECKINTIME	as admissionTime,
+			sr.CHECKOUTTIME as leaveTime
+		FROM
+			TB_SHUTTLE_RECORD sr
+		WHERE
+			
+			sr.CHILDID = #{child,jdbcType=BIGINT}
+			AND date_format(sr.CHECKINTIME, '%Y-%m-%d') &lt;= date_format(#{shuttleTime,jdbcType=TIMESTAMP}, '%Y-%m-%d')
+		ORDER BY sr.CHECKINTIME DESC
+		<if test="dataNum > 0">
+			LIMIT #{start,jdbcType=BIGINT} , #{dataNum,jdbcType=BIGINT}
+		</if>
+	</select>
+	
+	<select id="searchElders" resultType="java.util.Map" parameterType="java.lang.Long">
+		select
+			pc.PARENTID				as parent,
+			ifnull(pc.RELATION,'')	as relation
+		from
+			TB_PARENT_CHILD pc
+		where
+			pc.CHILDID = #{child,jdbcType=BIGINT}
+	</select>
+	<select id="searchIsShuttle" resultType="java.lang.Long">
+		SELECT 
+    		sr.ID
+		FROM
+    		TB_SHUTTLE_RECORD sr
+		WHERE
+    		sr.CHILDID = #{data.childid,jdbcType=BIGINT}
+        		AND DATE_FORMAT(sr.CHECKINTIME, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d')
+        		AND sr.CHECKOUTTIME IS NULL;
+	</select>
+	<insert id="insertShuttle">
+		insert into TB_SHUTTLE_RECORD 
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			CARDNO,
+			CHILDID,
+			SCHOOLID,
+			<if test="data.headImg != null" >
+				HEADIMGURL,
+			</if>
+			<if test="data.remark != null" >
+				REMARK,
+			</if>
+			<if test="data.headImgKey != null" >
+				HEADIMGKEY,
+			</if>
+			CHECKINTIME
+		</trim>
+		values 
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			#{data.cardNo,jdbcType=VARCHAR},
+			#{data.childid,jdbcType=BIGINT},
+			(select SCHOOLID from TB_PUNCH where PUNCHNO = #{data.punchSerial,jdbcType=VARCHAR}),
+			<if test="data.headImg != null">
+				#{data.headImg,jdbcType=VARCHAR},
+			</if>
+			<if test="data.remark != null">
+				#{data.remark,jdbcType=VARCHAR},
+			</if>
+			<if test="data.headImgKey != null">
+				#{data.headImgKey,jdbcType=VARCHAR},
+			</if>
+			now()
+		</trim>
+	</insert>
+	<update id="updateShuttle">
+		UPDATE TB_SHUTTLE_RECORD 
+		SET 
+    		CHECKOUTTIME = NOW()
+		WHERE
+    		ID = #{id,jdbcType=BIGINT}
+	</update>
+</mapper>

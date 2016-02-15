@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.school.dao.ClassStarDao">
+	<select id="searchMyChildWeekStar" resultType="com.cd.bbh.parent.mine.vo.ChildStarVO">
+		select
+			c.ID					as childid,
+			c.IMGHEAD				as headimg, 
+			c.NAME					as nickname, 
+			c.DTBIRTHDAY			as birthday, 
+			ifnull(c.WEEKDOLLER, 0)	as weekdoller
+		from 
+			TB_CHILD c, 
+			TB_PUPIL p
+		where
+			p.ID=c.ID 
+			and p.ID=#{childid,jdbcType=BIGINT}
+	</select>
+	
+	<select id="searchClassWeekStars" resultType="com.cd.bbh.parent.mine.vo.ChildStarVO">
+		select 
+			c.ID					as childid,
+			c.IMGHEAD				as headimg, 
+			c.NAME					as nickname, 
+			c.DTBIRTHDAY			as birthday, 
+			ifnull(c.WEEKDOLLER, 0)	as weekdoller 
+		from 
+			TB_CHILD c, 
+			TB_PUPIL p 
+		where 
+			c.ID = p.ID 
+			and p.CLASSID = (select CLASSID from TB_PUPIL where ID = #{childid,jdbcType=BIGINT}) 
+			and c.ID &lt;&gt; #{childid,jdbcType=BIGINT}
+		order by 
+			c.WEEKDOLLER desc 
+		limit 
+			#{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER}
+	</select>
+	
+	<select id="searchMyChildMonthStar" resultType="com.cd.bbh.parent.mine.vo.ChildStarVO">
+		select 
+			c.ID 						as childid, 
+			c.NAME 						as nickname, 
+			c.IMGHEAD 					as headimg, 
+			c.DTBIRTHDAY 				as birthday, 
+			ifnull(sum(w.SALARY), 0) 	as monthdoller  
+		from 
+			TB_CHILD c, 
+			TB_PUPIL p
+		left join 
+			TB_CHILD_WORK cw on cw.CHILDID = p.ID and date_format(cw.FINISHDATE,'%Y-%M-%D') = date_format(now(), '%Y-%M-%D')
+		left join 
+			TB_WORK w on w.ID = cw.WORKID
+		where 
+			p.ID=c.ID 
+			and p.ID=#{childid,jdbcType=BIGINT}
+	</select>
+	<select id="searchClassMonthStars" resultType="com.cd.bbh.parent.mine.vo.ChildStarVO">
+		select 
+			ID						as childid, 
+			IMGHEAD					as headimg, 
+			NAME					as nickname, 
+			DTBIRTHDAY				as birthday, 
+			ifnull(SUM(SALARY), 0)	as monthdoller
+		from (
+			select 
+				c.ID, 
+				c.IMGHEAD, 
+				c.NAME, 
+				c.DTBIRTHDAY, 
+				w.SALARY
+			from 
+				TB_CHILD c, 
+				TB_PUPIL p 
+			left join 
+				TB_CHILD_WORK cw on cw.CHILDID = p.ID and date_format(cw.FINISHDATE,'%Y-%M-%D') = date_format(now(), '%Y-%M-%D')
+			left join 
+				TB_WORK w on w.ID = cw.WORKID
+			where 
+				c.ID = p.ID 
+				and p.CLASSID = (select CLASSID from TB_PUPIL where ID = #{childid,jdbcType=BIGINT})
+				and c.ID &lt;&gt; #{childid,jdbcType=BIGINT}
+			) TEMP_TABLE
+		group by 
+			ID 
+		order by 
+			monthdoller desc 
+		limit 
+			#{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER}
+	</select>
+	
+	<select id="searchTeacherClassWeekStar" resultType="com.cd.bbh.parent.mine.vo.ChildStarVO">
+		select 
+			c.ID					as childid, 
+			c.IMGHEAD				as headimg, 
+			c.NAME					as nickname, 
+			c.DTBIRTHDAY			as birthday, 
+			ifnull(c.WEEKDOLLER,0)	as weekdoller
+		from 
+			TB_CHILD c, 
+			TB_PUPIL p, 
+			TB_TEACHER t
+		where 
+			c.ID = p.ID 
+			and p.CLASSID = t.CLASSID 
+			and t.ID = #{teacherid,jdbcType=BIGINT}
+		order by 
+			WEEKDOLLER desc 
+		limit 
+			#{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER}
+	</select>
+	
+	<select id="searchTeacherClassMonthStar" resultType="com.cd.bbh.parent.mine.vo.ChildStarVO">
+		select 
+			ID						as childid, 
+			IMGHEAD					as headimg, 
+			NAME					as nickname, 
+			DTBIRTHDAY				as birthday, 
+			ifnull(SUM(SALARY), 0)	as monthdoller
+		from (
+			select 
+				c.ID, 
+				c.IMGHEAD, 
+				c.NAME, 
+				c.DTBIRTHDAY, 
+				w.SALARY
+			from 
+				TB_CHILD c, 
+				TB_TEACHER t, 
+				TB_PUPIL p
+			left join TB_CHILD_WORK cw on cw.CHILDID = p.ID and date_format(cw.FINISHDATE,'%Y-%M-%D') = date_format(now(), '%Y-%M-%D')
+			left join TB_WORK w on w.ID = cw.WORKID
+			where 
+				c.ID = p.ID 
+				and p.CLASSID = t.CLASSID 
+				and t.ID = #{teacherid,jdbcType=BIGINT}
+			) TEMP_TABLE
+		group by 
+			ID 
+		order by 
+			MONTHDOLLER desc 
+		limit 
+			#{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER}
+	</select>
+</mapper>

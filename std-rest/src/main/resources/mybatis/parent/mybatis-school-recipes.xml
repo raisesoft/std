@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.school.dao.RecipesDao">
+
+	<resultMap type="com.cd.bbh.parent.school.vo.RecipesVO" id="recipesvo" autoMapping="true">
+	    <id column="dayOfWeek" property="dayOfWeek" jdbcType="INTEGER"/>
+		<collection property="recipes" fetchType="eager" javaType="java.util.ArrayList" autoMapping="true" ofType="com.cd.bbh.parent.school.vo.Recipe" />
+	</resultMap>
+
+	<select id="searchRecipes" resultMap="recipesvo" parameterType="java.util.Map">
+		select 
+			case dayofweek(rr.DELIVERYDATE) 
+				when 1 then '星期日' 
+				when 2 then '星期一' 
+				when 3 then '星期二' 
+				when 4 then '星期三' 
+				when 5 then '星期四'
+				when 6 then '星期五' 
+				when 7 then '星期六' 
+			end 				as dayOfWeek,
+			rr.ID 				as recipeid,
+			rr.CATEGORY 		as duration,
+			r.IMAGEURL			as image,
+			r.REMARK 			as comments
+		from 
+			TB_RECIPE r, 
+			TB_RECIPE_RECORD rr, 
+			TB_PUPIL p
+		where 
+			r.ID = rr.RECIPEID
+			and r.SCHOOLID = p.SCHOOLID
+			and date_format(#{beginDate,jdbcType=TIMESTAMP},'%Y-%m-%d') &lt;= rr.DELIVERYDATE 
+			and rr.DELIVERYDATE &lt;= date_format(#{endDate,jdbcType=TIMESTAMP},'%Y-%m-%d')
+			and p.ID = #{child,jdbcType=BIGINT}
+	</select>
+	<select id="searchTeacherRecipes" resultMap="recipesvo" parameterType="java.util.Map">
+		select 
+			case dayofweek(rr.DELIVERYDATE) 
+				when 1 then '星期日' 
+				when 2 then '星期一' 
+				when 3 then '星期二' 
+				when 4 then '星期三' 
+				when 5 then '星期四'
+				when 6 then '星期五' 
+				when 7 then '星期六' 
+			end 				as dayOfWeek,
+			rr.ID 				as recipeid,
+			rr.CATEGORY 		as duration,
+			r.IMAGEURL			as image,
+			r.REMARK 			as comments
+		from 
+			TB_RECIPE r, 
+			TB_RECIPE_RECORD rr, 
+			TB_TEACHER t
+		where 
+			r.ID = rr.RECIPEID
+			and r.SCHOOLID = t.SCHOOLID
+			and date_format(#{beginDate,jdbcType=TIMESTAMP},'%Y-%m-%d') &lt;= rr.DELIVERYDATE 
+			and rr.DELIVERYDATE &lt;= date_format(#{endDate,jdbcType=TIMESTAMP},'%Y-%m-%d')
+			and t.ID = #{teacherid,jdbcType=BIGINT}
+	</select>
+</mapper>

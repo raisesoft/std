@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cd.bbh.parent.school.dao.SchoolDao">
+	<select id="selectSchool" parameterType="java.lang.Long" resultType="com.cd.bbh.parent.school.vo.SchoolVO">
+		select 
+			s.ID			as schoolid, 
+			s.IMGLOGOURL 	as logo, 
+			s.REMARK		as remark, 
+			s.ADDR			as address, 
+			s.SCORE			as score, 
+			s.IMGPOPURL 	as logopop, 
+			s.COUNTRYID		as countryid, 
+			s.PROVINCEID	as provinceid, 
+			s.CITYID		as cityid, 
+			s.COUNTYID		as countyid, 
+			s.LONGTITUDE	as longtitude, 
+			s.LATITUDE		as latitude, 
+			u.NAME			as contact, 
+			u.EMAIL			as email,
+			u.PHONE			as phone
+		from 
+			TB_SCHOOL s, 
+			TB_USER u 
+		where 
+			s.ID = u.ID 
+			and s.ID = #{id,jdbcType=BIGINT}
+	</select>
+	<select id="selectStarSchool" parameterType="java.util.Map" resultType="com.cd.bbh.parent.school.vo.SchoolVO">
+		select 
+			s.ID			as schoolid, 
+			s.IMGLOGOURL 	as logo, 
+			s.REMARK		as remark, 
+			s.ADDR			as address, 
+			s.SCORE			as score, 
+			s.IMGPOPURL 	as logopop, 
+			s.COUNTRYID		as countryid, 
+			s.PROVINCEID	as provinceid, 
+			s.CITYID		as cityid, 
+			s.COUNTYID		as countyid, 
+			s.LONGTITUDE	as longtitude, 
+			s.LATITUDE		as latitude, 
+			u.NAME			as contact,
+			<if test="longtitude == null or latitude == null">
+			u.PHONE			as phone,
+			</if>
+			<if test="longtitude != null and latitude != null">
+			u.PHONE			as phone,
+		    (#{longtitude, jdbcType=FLOAT} - s.LONGTITUDE)
+		    *(#{longtitude, jdbcType=FLOAT} - s.LONGTITUDE) 
+		    + (#{latitude, jdbcType=FLOAT}-s.LATITUDE)
+		    *(#{latitude, jdbcType=FLOAT}-s.LATITUDE)
+							as distance,
+			</if>
+			u.EMAIL			as email
+		from 
+			TB_SCHOOL s, 
+			TB_USER u,
+			TB_CITY c,
+			TB_COUNTY ct
+		where 
+			s.ID = u.ID 
+			and c.ID = s.CITYID
+			and ct.ID= s.COUNTYID
+		<if test="cityname != null">
+			and (c.NAME like CONCAT('%', #{cityname, jdbcType=VARCHAR}, '%') or ct.NAME like CONCAT('%', #{cityname, jdbcType=VARCHAR}, '%'))
+		</if>
+		order by 
+		<if test="longtitude == null or latitude == null">
+			score desc, contact asc 
+		</if>
+		<if test="longtitude != null and latitude != null">
+			distance is null, distance, contact asc, score desc
+		</if>
+		limit 
+			#{page, jdbcType=BIGINT}, #{pagesize, jdbcType=BIGINT}
+	</select>
+	<select id="selectSchoolByName" resultType="com.cd.bbh.parent.school.vo.SchoolVO">
+		select 
+			s.ID			as schoolid, 
+			s.IMGLOGOURL 	as logo, 
+			s.REMARK		as remark, 
+			s.ADDR			as address, 
+			s.SCORE			as score, 
+			s.IMGPOPURL 	as logopop, 
+			s.COUNTRYID		as countryid, 
+			s.PROVINCEID	as provinceid, 
+			s.CITYID		as cityid, 
+			s.COUNTYID		as countyid, 
+			s.LONGTITUDE	as longtitude, 
+			s.LATITUDE		as latitude, 
+			u.NAME			as contact, 
+		    <if test="longtitude == null or latitude == null">
+			u.PHONE			as phone,
+			</if>
+			<if test="longtitude != null and latitude != null">
+			u.PHONE			as phone,
+		    (#{longtitude, jdbcType=FLOAT} - s.LONGTITUDE)
+		    *(#{longtitude, jdbcType=FLOAT} - s.LONGTITUDE) 
+		    + (#{latitude, jdbcType=FLOAT}-s.LATITUDE)
+		    *(#{latitude, jdbcType=FLOAT}-s.LATITUDE)
+							as distance,
+			</if>
+			u.EMAIL			as email
+		from 
+			TB_SCHOOL s, 
+			TB_USER u,
+			TB_COUNTY ct
+		where 
+			s.ID = u.ID
+			and ct.ID = s.COUNTYID
+			<if test="condition != null and condition != ''.toString()">
+			and u.NAME like CONCAT('%', #{condition, jdbcType=VARCHAR}, '%')
+			</if>
+		order by 
+		<if test="longtitude == null or latitude == null">
+			score desc, contact asc 
+		</if>
+		<if test="longtitude != null and latitude != null">
+			distance is null, distance, contact asc, score desc
+		</if>
+		limit 
+			#{page, jdbcType=BIGINT}, #{pagesize, jdbcType=BIGINT}
+	</select>
+</mapper>

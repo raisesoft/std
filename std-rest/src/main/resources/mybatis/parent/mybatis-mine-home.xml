@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cd.bbh.parent.mine.dao.MineHomeDao">
+	<select id="searchByParentId" parameterType="java.lang.Long" resultType="com.cd.bbh.parent.mine.model.MineHome">
+		select 
+			c.ID 				as id, 
+			c.IMGHEAD			as headimg, 
+			c.NAME				as name, 
+			c.NICKNAME			as nickname, 
+			c.AGE				as age, 
+			c.GENDER			as gender, 
+			c.TOTALDOLLER		as totaldoller, 
+			c.WEEKDOLLER		as weekdoller,
+			c.AVAILABLEDOLLER	as availabledoller, 
+			c.DTBIRTHDAY		as dtbirthday, 
+			c.CNTWORK			as cntwork, 
+			c.STAT				as stat, 
+			c.VOUCHER			as voucher, 
+			c.BLOODTYPE			as bloodtype
+		from 
+			TB_CHILD c, 
+			TB_PARENT_CHILD pc
+		where 
+			c.ID = pc.CHILDID 
+			and pc.PARENTID = #{parentid, jdbcType=BIGINT}
+	</select>
+</mapper>

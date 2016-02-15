@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.school.dao.CommentDao">
+	<insert id="insertComment" parameterType="java.util.Map">
+		insert into TB_KINDERGARTEN_MAILBOX(LEADERID, CONTENT, SPOKESMAN)
+		values( 
+			#{leaderid,jdbcType=BIGINT},
+			#{content,jdbcType=VARCHAR},
+			#{spokesman,jdbcType=BIGINT}
+		)
+	</insert>
+	<select id="searchSchool" parameterType="java.lang.Long" resultType="java.lang.Long">
+		select 
+			SCHOOLID
+		from 
+			TB_PUPIL
+		where
+			ID = #{pupildid,jdbcType=BIGINT}
+	</select>
+</mapper>

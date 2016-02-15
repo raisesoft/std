@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.school.dao.ContactDao">
+	<resultMap type="com.cd.bbh.parent.school.vo.ContactVO" id="contacts" autoMapping="true" />
+
+	<select id="searchContactsByTeacher" resultMap="contacts" parameterType="java.util.Map">
+		select
+			u.NAME as username,
+			u.PHONE as cellphone,
+			u.IMGHEAD as headimg,
+			u.QQ as qq,
+			u.WEBCHAT as wechat
+		from
+			TB_REL_TEACHER_CLASS tc,
+			TB_PARENT_CHILD pc,
+			TB_PUPIL c,
+			TB_USER u
+		where
+			tc.CLASSID = c.CLASSID
+			and c.ID = pc.CHILDID
+			and u.ID = pc.PARENTID
+			and tc.TEACHERID = #{teacherid,jdbcType=BIGINT}
+	</select>
+</mapper>

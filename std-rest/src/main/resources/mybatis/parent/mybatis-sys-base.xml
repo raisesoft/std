@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.more.dao.AppBaseDao">
+	<select id="searchAppVersion" resultType="java.util.Map">
+		select 
+    		VERSION 	as version,
+    		URL			as url
+		from 
+			TB_SYS_APPVERSION
+		where 
+			OSTYPE=#{ostype,jdbcType=VARCHAR}
+		<if test="clientType != null">
+			and CLIENTTYPE = #{clientType, jdbcType=VARCHAR} 
+		</if>
+		<if test="version != null and version != 'latest'.toString()">
+			and VERSION = #{version,jdbcType=VARCHAR}
+		</if>
+		<if test="version == 'latest'.toString()">
+		order by version desc limit 0,1 
+		</if>
+		<if test="version == null">
+		order by version desc
+		</if>
+	</select>
+</mapper>

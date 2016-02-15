@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.mine.dao.CargoCatDao">
+	<resultMap id="BaseResultMap" type="com.cd.bbh.parent.mine.model.CargoCat">
+		<id column="ID" property="cargocatid" jdbcType="BIGINT" />
+		<result column="CAT" property="cat" jdbcType="VARCHAR" />
+		<result column="CREATEDBY" property="createdby" jdbcType="VARCHAR" />
+		<result column="DTCREATE" property="dtcreate" jdbcType="TIMESTAMP" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		ID, CAT, CREATEDBY, DTCREATE
+	</sql>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+		select
+		<include refid="Base_Column_List" />
+		from TB_CARGO_CAT
+		where ID = #{id,jdbcType=BIGINT}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+		delete from TB_CARGO_CAT
+		where ID = #{id,jdbcType=BIGINT}
+	</delete>
+	<insert id="insert" parameterType="com.cd.bbh.parent.mine.model.CargoCat">
+		insert into TB_CARGO_CAT (ID, CAT, CREATEDBY,
+		DTCREATE)
+		values (#{id,jdbcType=BIGINT}, #{cat,jdbcType=VARCHAR}, #{createdby,jdbcType=VARCHAR},
+		#{dtcreate,jdbcType=TIMESTAMP})
+	</insert>
+	<insert id="insertSelective" parameterType="com.cd.bbh.parent.mine.model.CargoCat">
+		insert into TB_CARGO_CAT
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				ID,
+			</if>
+			<if test="cat != null">
+				CAT,
+			</if>
+			<if test="createdby != null">
+				CREATEDBY,
+			</if>
+			<if test="dtcreate != null">
+				DTCREATE,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=BIGINT},
+			</if>
+			<if test="cat != null">
+				#{cat,jdbcType=VARCHAR},
+			</if>
+			<if test="createdby != null">
+				#{createdby,jdbcType=VARCHAR},
+			</if>
+			<if test="dtcreate != null">
+				#{dtcreate,jdbcType=TIMESTAMP},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.cd.bbh.parent.mine.model.CargoCat">
+		update TB_CARGO_CAT
+		<set>
+			<if test="cat != null">
+				CAT = #{cat,jdbcType=VARCHAR},
+			</if>
+			<if test="createdby != null">
+				CREATEDBY = #{createdby,jdbcType=VARCHAR},
+			</if>
+			<if test="dtcreate != null">
+				DTCREATE = #{dtcreate,jdbcType=TIMESTAMP},
+			</if>
+		</set>
+		where ID = #{id,jdbcType=BIGINT}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.cd.bbh.parent.mine.model.CargoCat">
+		update TB_CARGO_CAT
+		set CAT = #{cat,jdbcType=VARCHAR},
+		CREATEDBY = #{createdby,jdbcType=VARCHAR},
+		DTCREATE =
+		#{dtcreate,jdbcType=TIMESTAMP}
+		where ID = #{id,jdbcType=BIGINT}
+	</update>
+</mapper>

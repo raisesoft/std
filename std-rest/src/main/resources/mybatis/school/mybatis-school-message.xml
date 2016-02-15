@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.school.app.dao.SchoolMessageDao">
+	<insert id="insertMsgByTeacher" parameterType="com.cd.bbh.school.app.vo.Message" >
+		INSERT INTO TB_NOTIFICATION(
+			TITLE,
+			CONTENT,
+			DTCREATE,
+			CREATEDBY,
+			STAT,
+			LEVEL,
+			PUSHTAGS,
+			PUSHTYPE)
+		VALUES(
+			#{msg.title, jdbcType=VARCHAR},
+			#{msg.content, jdbcType=VARCHAR},
+			#{msg.createDate, jdbcType=TIMESTAMP},
+			#{msg.createUser, jdbcType=BIGINT},
+			#{msg.stat, jdbcType=VARCHAR},
+			#{msg.level, jdbcType=VARCHAR},
+			#{msg.pushTags, jdbcType=VARCHAR},
+			#{msg.type, jdbcType=VARCHAR});
+		
+	</insert>
+</mapper>

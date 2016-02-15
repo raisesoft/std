@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.mine.dao.ChildRecordDao">
+	<resultMap id="BaseResultMap" type="com.cd.bbh.parent.mine.model.ChildRecord">
+		<id column="ID" property="baseid" jdbcType="BIGINT" />
+		<result column="NAME" property="name" jdbcType="VARCHAR" />
+		<result column="IMGHEAD" property="headimg" jdbcType="VARCHAR" />
+		<result column="AGE" property="age" jdbcType="INTEGER" />
+		<result column="AVAILABLEDOLLER" property="availabledoller" jdbcType="FLOAT" />
+	</resultMap>
+	
+	<resultMap id="InfoResultMap" type="com.cd.bbh.parent.mine.model.ChildInfo">
+		<id column="ID" property="infoid" jdbcType="BIGINT" />
+		<result column="HEIGHT" property="height" jdbcType="BIGINT" />
+		<result column="WEIGHT" property="weight" jdbcType="BIGINT" />
+		<result column="DTCREATE" property="dtcreate" jdbcType="TIMESTAMP" />
+		<result column="CREATEDBY" property="createdby" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<resultMap id="MediaResultMap" type="com.cd.bbh.parent.mine.model.ChildMedia">
+		<id column="AIID" property="mediaid" jdbcType="BIGINT" />
+		<result column="MEDIAPATH" property="mediapath" jdbcType="VARCHAR" />
+		<result column="MEDIATYPE" property="mediatype" jdbcType="VARCHAR" />
+		<result column="REMARK" property="remark" jdbcType="VARCHAR" />
+		<result column="DTCREATE" property="dtcreate" jdbcType="TIMESTAMP" />
+		<result column="CREATOR" property="creator" jdbcType="VARCHAR" />
+		<result column="CREATORID" property="creatorid" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<resultMap id="WorkResultMap" type="com.cd.bbh.parent.mine.model.ChildWork">
+		<id column="ID" property="workid" jdbcType="BIGINT" />
+		<result column="WNAME" property="workname" jdbcType="VARCHAR" />
+		<result column="SCORE" property="score" jdbcType="FLOAT" />
+		<result column="FINISHDATE" property="finishdate" jdbcType="TIMESTAMP" />
+		<result column="COMMENTS" property="comments" jdbcType="VARCHAR" />
+		<result column="STAT" property="stat" jdbcType="VARCHAR" />
+		<result column="DTCREATE" property="createdate" jdbcType="TIMESTAMP" />
+		<result column="CREATEDBY" property="createdby" jdbcType="VARCHAR" />
+	</resultMap>
+
+
+	<select id="search" resultMap="BaseResultMap" parameterType="java.lang.Long">
+		select c.ID, c.IMGHEAD, c.NAME,c.AGE from TB_CHILD c where c.id = #{childid, jdbcType=BIGINT}
+	</select>
+	
+	<select id="searchInfoCount" resultType="java.util.Map" parameterType="java.util.Map">
+		select 
+			count(ID) as datacount, 
+			DTCREATE  as dtcreate
+		from 
+			TB_CHILD_BASICINFO 
+		where 
+			CHILDID = #{childid, jdbcType=BIGINT}
+			and DTCREATE &lt; #{startDate,jdbcType=TIMESTAMP}
+		group by date_format(DTCREATE, '%Y-%M-%D')  
+		order by DTCREATE desc
+		limit #{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER}
+	</select>
+	<select id="searchWorkCount" resultType="java.util.Map" parameterType="java.util.Map">
+		select 
+			count(ID) as datacount, 
+			DTCREATE  as dtcreate 
+		from TB_CHILD_WORK 
+		where 
+			CHILDID = #{childid, jdbcType=BIGINT}
+			and DTCREATE &lt; #{startDate,jdbcType=TIMESTAMP}
+		group by date_format(DTCREATE, '%Y-%M-%D') 
+		order by DTCREATE desc
+		limit #{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER}
+	</select>
+	
+	<select id="searchInfo" resultMap="InfoResultMap" parameterType="java.util.Map">
+		select cb.ID, t.NAME as CREATEDBY, cb.DTCREATE, cb.HEIGHT,cb.WEIGHT
+		from TB_CHILD_BASICINFO cb, TB_USER t
+		where cb.CREATEDBY = t.ID 
+			and cb.CHILDID = #{childid, jdbcType=BIGINT}
+			and DATE_FORMAT( cb.DTCREATE, '%Y-%m-%d') = DATE_FORMAT( #{referdate,jdbcType=TIMESTAMP}, '%Y-%m-%d')
+		order by cb.DTCREATE desc limit #{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER};
+	</select>
+	<select id="searchWork" resultMap="WorkResultMap" parameterType="java.util.Map">
+		select cw.ID, cw.DTCREATE, cw.STAT, cw.COMMENTS, cw.SCORE, cw.FINISHDATE, t.NAME as CREATEDBY, w.WNAME
+		from TB_CHILD_WORK cw, TB_USER t, TB_WORK w
+		where t.ID = cw.CREATEDBY and cw.WORKID = w.ID 
+			and cw.CHILDID = #{childid, jdbcType=BIGINT} 
+			and DATE_FORMAT( cw.FINISHDATE, '%Y-%m-%d') = DATE_FORMAT( #{referdate,jdbcType=TIMESTAMP}, '%Y-%m-%d')
+		order by cw.DTCREATE desc limit #{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER};
+	</select>
+</mapper>

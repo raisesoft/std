@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.mine.dao.UserDao">
+	<resultMap id="BaseResultMap" type="com.cd.bbh.parent.mine.model.User">
+		<id column="ID" property="id" jdbcType="BIGINT" />
+		<result column="NAME" property="name" jdbcType="VARCHAR" />
+		<result column="ROLEID" property="roleid" jdbcType="DECIMAL" />
+		<result column="PHONE" property="phone" jdbcType="DECIMAL" />
+		<result column="EMAIL" property="email" jdbcType="VARCHAR" />
+		<result column="PASS" property="pass" jdbcType="VARCHAR" />
+		<result column="QQ" property="qq" jdbcType="VARCHAR" />
+		<result column="WEBCHAT" property="wechat" jdbcType="VARCHAR" />
+		<result column="IMGHEAD" property="headimg" jdbcType="VARCHAR" />
+		<result column="STAT" property="stat" jdbcType="VARCHAR" />
+		<result column="PID" property="pid" jdbcType="BIGINT" />
+		<result column="TID" property="tid" jdbcType="BIGINT" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		ID, NAME, ROLEID, PHONE, EMAIL, PASS, QQ, WEBCHAT, IMGHEAD, STAT
+	</sql>
+
+	<!-- 个人信息使用 -->
+	<resultMap id="DetailResultMap" type="com.cd.bbh.parent.mine.model.Personal">
+		<result column="ID" property="userid" jdbcType="BIGINT" />
+		<result column="NAME" property="username" jdbcType="VARCHAR" />
+		<result column="AGE" property="age" jdbcType="INTEGER" />
+		<result column="GENDER" property="gender" jdbcType="VARCHAR" />
+		<result column="IMGHEAD" property="headimg" jdbcType="VARCHAR" />
+		<result column="BIRTHDAY" property="birthday" jdbcType="TIMESTAMP" />
+	</resultMap>
+	
+	<select id="search" resultMap="BaseResultMap" parameterType="java.lang.Long">
+		select
+			<include refid="Base_Column_List" />
+		from 
+			TB_USER
+		where 
+			ID = #{id,jdbcType=BIGINT}
+	</select>
+	<select id="searchByUnique" resultMap="BaseResultMap" parameterType="java.lang.String">
+		select 
+			u.ID, u.NAME, u.ROLEID, u.PHONE, u.EMAIL, u.PASS, u.QQ, u.WEBCHAT, u.IMGHEAD, u.STAT, p.ID PID, t.ID TID
+		from 
+			TB_USER u
+		left join TB_PARENT p on p.ID = u.ID
+		left join TB_TEACHER t on t.ID = u.ID
+		where 
+			u.PHONE = #{column,jdbcType=VARCHAR} 
+			or u.EMAIL = #{column,jdbcType=VARCHAR}
+	</select>
+	<select id="searchParentType" resultType="java.lang.String" parameterType="java.lang.String">
+		select STAT from TB_PARENT where DEVICENO = #{imei, jdbcType=VARCHAR}
+	</select>
+	<select id="searchUserDetail" resultMap="DetailResultMap" parameterType="java.util.Map">
+		select 
+			u.ID, u.NAME, u.IMGHEAD, o.AGE, o.BIRTHDAY,o.GENDER
+		from 
+			TB_USER u 
+		left join 
+		<if test="roleid == 40">
+			 TB_TEACHER as o on o.ID = u.ID
+		</if>
+		<if test="roleid == 50">
+			 TB_PARENT as o on o.ID = u.ID
+		</if>
+		where 
+		  	u.ID = #{id, jdbcType=BIGINT}
+	</select>
+	<select id="checkUserDetail" resultType="java.util.Map" parameterType="java.util.Map">
+		select 
+			u.IMGHEAD, count(o.GENDER) as amount 
+		from 
+			TB_USER u
+		<if test="roleid == 40">
+			 , TB_TEACHER o
+		</if>
+		<if test="roleid == 50">
+			 , TB_PARENT o
+		</if>
+		where 
+		  o.ID = u.ID 
+		  and u.ID = #{id,jdbcType=BIGINT}
+	</select>
+	
+	<delete id="remove" parameterType="java.lang.Long">
+		delete from TB_USER where ID = #{id,jdbcType=BIGINT}
+	</delete>
+
+	<insert id="addBaseUserInfo" parameterType="java.util.Map">
+		insert into TB_USER (ROLEID, PHONE, PASS, ISINITPASS, STAT) 
+		values (#{roleid,jdbcType=BIGINT},#{cellphone,jdbcType=VARCHAR},#{password,jdbcType=VARCHAR},'N','C');
+		insert into TB_PARENT (ID, DEVICENO,STAT) VALUES ((SELECT ID FROM TB_USER WHERE PHONE=#{cellphone,jdbcType=VARCHAR}),#{device,jdbcType=VARCHAR},#{parentstat,jdbcType=VARCHAR});
+	</insert>
+
+	<update id="updateUserDetail" parameterType="java.util.Map">
+		update 
+			TB_USER 
+		set 
+			NAME=#{name,jdbcType=VARCHAR} 
+			<if test="headimg != null">
+			, IMGHEAD=#{headimg,jdbcType=VARCHAR}
+			</if>
+		where 
+			ID = #{id, jdbcType=BIGINT};
+		<if test="roleid == 50 and exist == 1">
+		update TB_PARENT
+		set
+			NAME = #{name,jdbcType=VARCHAR},
+			GENDER= #{gender,jdbcType=VARCHAR},
+			BIRTHDAY= #{birthday,jdbcType=TIMESTAMP},
+			AGE = #{age,jdbcType=INTEGER}
+		where
+			ID = #{id, jdbcType=BIGINT};
+		</if>
+		<if test="roleid == 50 and exist == 0">
+		update 
+			TB_PARENT
+		set 
+			NAME = #{name,jdbcType=VARCHAR},
+			DEVICENO = #{deviceno,jdbcType=VARCHAR}, 
+			IDTYPE = #{idtype,jdbcType=VARCHAR},
+			IDNO = #{idno,jdbcType=VARCHAR},
+			STAT = #{stat,jdbcType=VARCHAR}, 
+			GENDER = #{gender,jdbcType=VARCHAR},
+			BIRTHDAY = #{birthday,jdbcType=TIMESTAMP},
+			AGE = #{age,jdbcType=INTEGER}
+		where
+			ID = #{id, jdbcType=BIGINT};
+		</if>
+		<if test="roleid == 40">
+		update 
+			TB_TEACHER
+		set
+			NAME = #{name,jdbcType=VARCHAR},
+			GENDER= #{gender,jdbcType=VARCHAR},
+			BIRTHDAY= #{birthday,jdbcType=TIMESTAMP},
+			AGE = #{age,jdbcType=INTEGER}
+		where
+			ID = #{id, jdbcType=BIGINT};
+		</if>
+	</update>
+	<update id="updatePassword" parameterType="java.util.Map">
+		update 
+			TB_USER
+		set 
+			PASS = #{pass,jdbcType=VARCHAR},
+			UPDATEDBY = #{id,jdbcType=BIGINT}
+		where 
+			ID = #{id,jdbcType=BIGINT}
+	</update>
+	
+	<select id="checkHasParentRole" parameterType="java.lang.Long" resultType="java.lang.Integer" >
+		select count(p.ID) from TB_PARENT p, TB_USER u where u.ID = p.ID and u.ROLEID = 40 and ID = #{parentid,jdbcType=BIGINT}
+	</select>
+</mapper>

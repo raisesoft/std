@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cd.bbh.parent.mine.dao.ChildSitterDao">
+	<resultMap id="BaseResultMap" type="com.cd.bbh.parent.mine.model.ChildSitter">
+		<id column="CHILDID" property="childid" jdbcType="BIGINT" />
+		<result column="NAME" property="name" jdbcType="VARCHAR" />
+		<result column="IMGHEAD" property="headimg" jdbcType="VARCHAR" />
+		<result column="GENDER" property="gender" jdbcType="VARCHAR" />
+		<collection property="devices" resultMap="ChildDeviceResultMap" />
+	</resultMap>
+	<resultMap id="ChildDeviceResultMap" type="com.cd.bbh.parent.mine.model.ChildDevice">
+		<id column="CDID" property="id" jdbcType="BIGINT" />
+		<result column="DEVICEID" property="deviceid" jdbcType="BIGINT" />
+		<result column="STAT" property="stat" jdbcType="VARCHAR" />
+		<result column="DEVICESN" property="devicesn" jdbcType="VARCHAR" />
+		<result column="ACCOUNT" property="account" jdbcType="VARCHAR" />
+		<result column="PASSWORD" property="password" jdbcType="VARCHAR" />
+		<result column="IMGPATH" property="imgpath" jdbcType="VARCHAR" />
+	</resultMap>
+	<resultMap id="DeviceResultMap" type="com.cd.bbh.parent.mine.model.Device">
+		<id column="ID" property="id" jdbcType="BIGINT" />
+		<result column="NAME" property="name" jdbcType="VARCHAR" />
+		<result column="REMARK" property="remark" jdbcType="VARCHAR" />
+		<result column="USEINFO" property="useinfo" jdbcType="VARCHAR" />
+		<result column="ORIPRICE" property="oriprice" jdbcType="REAL" />
+		<result column="CURPRICE" property="curprice" jdbcType="REAL" />
+		<result column="CNTREP" property="cntrep" jdbcType="DECIMAL" />
+		<result column="TYPE" property="type" jdbcType="VARCHAR" />
+		<result column="IMGPATH" property="imgpath" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<select id="searchSitters" parameterType="java.lang.Long" resultMap="BaseResultMap">
+		select c.ID as CHILDID, c.NAME, c.IMGHEAD, c.GENDER, cd.ID as CDID, cd.DEVICEID, cd.DEVICESN, cd.ACCOUNT, cd.PASSWORD, cd.STAT, d.IMGPATHURL as IMGPATH
+		from TB_CHILD c, TB_PARENT_CHILD p
+		left join TB_CHILD_DEVICE as cd on cd.CHILDID = p.CHILDID
+		left join TB_DEVICE as d on d.ID = cd.DEVICEID
+		where c.ID = p.CHILDID and p.PARENTID = #{parentid, jdbcType=BIGINT}
+	</select>
+
+	<select id="searchAllDevice" resultMap="DeviceResultMap">
+		select ID, NAME, REMARK, USEINFO, CURPRICE, CNTREP, TYPE, IMGPATHURL as IMGPATH from TB_DEVICE
+	</select>
+	<select id="searchDevice" parameterType="java.lang.Long" resultMap="DeviceResultMap">
+		select ID, NAME, REMARK, USEINFO, CURPRICE, CNTREP, TYPE, IMGPATHURL as IMGPATH from TB_DEVICE where ID = #{deviceid, jdbcType=BIGINT}
+	</select>
+	<insert id="addChildDevice" parameterType="java.util.Map">
+		INSERT INTO TB_CHILD_DEVICE (DEVICEID, DEVICESN, ACCOUNT, PASSWORD, CREATEDBY)
+		VALUES
+		(
+			#{deviceid, jdbcType=BIGINT},
+			#{dsn, jdbcType=VARCHAR},
+			#{daccount, jdbcType=VARCHAR},
+			#{dpassword, jdbcType=VARCHAR},
+			#{createdby, jdbcType=VARCHAR}
+		)
+	</insert>
+	<insert id="bindChildDevice" parameterType="java.util.Map">
+		update 
+			TB_CHILD_DEVICE
+		set
+			STAT = 'N'
+		where
+			ID = 
+	</insert>
+</mapper>

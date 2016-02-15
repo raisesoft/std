@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.school.app.dao.SchoolLoginDao">
+	<select id="selectTeacher" resultType="com.cd.bbh.parent.login.vo.LoginInfoVO">
+		SELECT 
+    		u.ID AS userid,
+    		u.NAME AS username,
+    		u.PHONE AS account,
+    		u.EMAIL AS email,
+    		u.PASS AS password,
+    		u.IMGHEAD AS headimage,
+    		u.STAT AS state,
+    		t.IMEI AS imei
+		FROM
+    		TB_USER u
+        JOIN
+    		TB_TEACHER t ON t.ID = u.ID
+		WHERE
+    		u.PHONE = #{phone, jdbcType=VARCHAR}
+        	AND u.PASS = #{pass, jdbcType=VARCHAR}
+	</select>
+	<select id="selectSchool" resultType="com.cd.bbh.parent.login.vo.LoginInfoVO">
+		SELECT 
+    		u.ID AS userid,
+    		u.NAME AS username,
+    		u.PHONE AS account,
+    		u.EMAIL AS email,
+    		u.PASS AS password,
+    		u.IMGHEAD AS headimage,
+    		u.STAT AS state
+		FROM
+    		TB_USER u
+        JOIN
+    		TB_SCHOOL s ON s.ID = u.ID
+    	WHERE
+    		u.PHONE = #{phone, jdbcType=VARCHAR}
+        	AND u.PASS = #{pass, jdbcType=VARCHAR}
+	</select>
+	<select id="selectUserCount" resultType="java.lang.Long">
+		SELECT 
+    		COUNT(u.id)
+		FROM
+    		TB_USER u
+		WHERE
+    		u.PHONE = #{phone, jdbcType=VARCHAR}
+	</select>
+	<update id="updatePassword">
+		UPDATE TB_USER u
+		SET
+			u.PASS = #{pass, jdbcType=VARCHAR}
+		WHERE 
+			u.PHONE = #{phone, jdbcType=VARCHAR};
+	</update>
+	<select id="selectTeacherInfoById" resultType="com.cd.bbh.school.app.vo.TeacherInfo">
+		SELECT 
+    		u.ID AS id,
+    		u.NAME AS name,
+    		u.PHONE AS phone,
+    		u.EMAIL AS email,
+    		u.QQ AS qq,
+    		u.WEBCHAT AS webchat,
+    		u.IMGHEAD AS imghead,
+    		t.AGE AS age,
+    		t.GENDER AS sex,
+    		s.NAME AS school,
+    		t.REMARK AS remark,
+    		t.BIRTHDAY AS birthday
+		FROM
+    		TB_USER u
+        JOIN
+    		TB_TEACHER t ON u.ID = t.ID
+    	LEFT JOIN
+    		TB_USER s ON t.SCHOOLID = s.ID
+		WHERE
+    		u.ID = #{id, jdbcType=BIGINT};
+	</select>
+	<select id="selectSchoolInfoById" resultType="com.cd.bbh.school.app.vo.SchoolInfo">
+		SELECT 
+    		u.ID AS id,
+    		u.NAME AS name,
+    		u.PHONE AS phone,
+    		u.EMAIL AS email,
+    		u.QQ AS qq,
+    		u.WEBCHAT AS webchat,
+    		u.IMGHEAD AS imghead,
+    		s.IMGLOGOKEY AS imgLogoKey,
+    		s.REMARK AS remark,
+    		cry.NAME AS country,
+    		pv.NAME AS province,
+    		c.NAME AS city,
+    		cy.NAME AS county,
+    		s.ADDR AS address,
+    		s.SCORE AS score,
+    		s.IMGLOGOURL AS imgLogoUrl,
+    		s.IMGPOPURL AS imgPopUrl
+		FROM
+    		TB_USER u
+        JOIN
+    		TB_SCHOOL s ON u.ID = s.ID
+        LEFT JOIN
+    		TB_COUNTRY cry ON s.COUNTRYID = cry.ID
+        LEFT JOIN
+    		TB_PROVINCE pv ON s.PROVINCEID = pv.Id
+        LEFT JOIN
+    		TB_CITY c ON s.CITYID = c.ID
+        LEFT JOIN
+    		TB_COUNTY cy ON s.COUNTYID = cy.ID
+    	WHERE
+    		u.ID = #{id, jdbcType=BIGINT};
+	</select>
+	<update id="updateTeacherInfo">
+	UPDATE TB_USER u,
+    	TB_TEACHER t 
+    <trim prefixOverrides=",">
+    	<set>
+    		<if test="t.name != null">u.NAME = #{t.name},</if>
+    		<if test="t.qq != null">u.QQ = #{t.qq},</if>
+    		<if test="t.webchat != null">u.WEBCHAT = #{t.webchat},</if>
+    		<if test="t.imghead != null">u.IMGHEAD = #{t.imghead},</if>
+    		<if test="t.updateUserId != null">u.UPDATEDBY = #{t.updateUserId},</if>
+    		<if test="t.updateDate != null">u.DTUPDATE = #{t.updateDate},</if>
+    		<if test="t.remark != null">t.REMARK = #{t.remark},</if>
+    		<if test="t.age > 0">t.AGE = #{t.age},</if>
+    		<if test="t.sex != null">t.GENDER = #{t.sex},</if>
+    		<if test="t.birthday != null">t.BIRTHDAY = #{t.birthday}</if>
+    	</set>
+    WHERE
+    	u.ID = t.ID
+    	AND u.ID = #{t.id}
+    </trim>
+	</update>
+	<update id="updateSchoolInfo">
+	UPDATE TB_USER u,
+    	TB_SCHOOL s
+    <trim prefixOverrides=",">
+    	<set>
+    		<if test="s.name != null">u.NAME = #{s.name},</if>
+    		<if test="s.qq != null">u.QQ = #{s.qq},</if>
+    		<if test="s.webchat != null">u.WEBCHAT = #{s.webchat},</if>
+    		<if test="s.imghead != null">u.IMGHEAD = #{s.imghead},</if>
+    		<if test="s.updateUserId != null">u.UPDATEDBY = #{s.updateUserId},</if>
+    		<if test="s.updateDate != null">u.DTUPDATE = #{s.updateDate},</if>
+    		<if test="s.remark != null">s.REMARK = #{s.remark},</if>
+    		<if test="s.imgLogoKey != null">s.IMGLOGOKEY = #{s.imgLogoKey},</if>
+    		<if test="s.address != null">s.ADDR = #{s.address},</if>
+    		<if test="s.imgPopUrl != null">s.IMGPOPURL = #{s.imgPopUrl},</if>
+    		<if test="s.countryId > 0">s.COUNTRYID = #{s.countryId},</if>
+    		<if test="s.provinceId > 0">s.PROVINCEID = #{s.provinceId},</if>
+    		<if test="s.cityId > 0">s.CITYID = #{s.cityId},</if>
+    		<if test="s.countyId > 0">s.COUNTYID = #{s.countyId},</if>
+    		<if test="s.imgLogoUrl != null">s.IMGLOGOURL = #{s.imgLogoUrl},</if>
+    	</set>
+    WHERE
+    	u.ID = s.ID
+    	AND u.ID = #{s.id}
+    </trim>
+	</update>
+</mapper>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.mine.dao.WorkDao">
+	<sql id="work_columns">
+		ID			as workid, 
+		AGEPERIOD	as agerange, 
+		IMGPATHURL 	as workimg, 
+		SALARY		as salary, 
+		FREQUENCE	as frequence, 
+		REMARK		as workremark, 
+		COST		as workcost, 
+		WNAME		as workname, 
+		ADDRESS		as address, 
+		WORKDATE	as workdate
+	</sql>
+	<sql id="child_work_columns">
+		c.ID			as workid, 
+		c.COMMENTS		as comments, 
+		c.ADDRESS		as address, 
+		c.SCORE			as score, 
+		c.STAT			as stat, 
+		c.FINISHDATE	as finishdate, 
+		w.SALARY		as salary, 
+		w.WNAME			as workname, 
+		w.IMGPATHURL 	as IMGPATH, 
+		w.REMARK		as workremark, 
+		w.AGEPERIOD		as agerange, 
+		w.FREQUENCE		as frequence, 
+		w.ADDRESS		as address, 
+		w.WORKDATE		as workdate
+	</sql>
+
+	<select id="searchWork" resultType="com.cd.bbh.parent.mine.model.Work" parameterType="java.lang.Long">
+		select 
+			<include refid="work_columns"/>
+		from 
+			TB_WORK 
+		where 
+			ID = #{id,jdbcType=BIGINT}
+	</select>
+	<select id="searchAllWork" resultType="com.cd.bbh.parent.mine.model.Work" parameterType="java.util.Map">
+		select 
+			<include refid="work_columns"/>
+		from 
+			TB_WORK 
+		order by 
+			DTCREATE desc 
+		limit 
+			#{page, jdbcType=INTEGER}, #{pagesize, jdbcType=INTEGER}
+	</select>
+	<select id="searchUnselectedWork" resultType="com.cd.bbh.parent.mine.model.Work" parameterType="java.lang.Long">
+		select 
+			<include refid="work_columns"/>
+		from 
+			TB_WORK w, 
+			TB_CHILD_WORK c
+		where 
+			c.WORKID &lt;&gt; w.ID 
+			and c.STAT &lt;&gt; 'D' 
+			and c.CHILDID = #{childid,jdbcType=BIGINT}
+	</select>
+	<select id="searchUndoWorkCount" resultType="java.lang.Integer" parameterType="java.lang.Long">
+		select 
+			count(ID) 
+		from 
+			TB_CHILD_WORK 
+		where 
+			STAT &lt;&gt; 'D' 
+			and CHILDID = #{childid,jdbcType=BIGINT}
+	</select>
+	<select id="searchUndoWork" resultType="com.cd.bbh.parent.mine.model.ChildWork" parameterType="java.util.Map">
+		select 
+			<include refid="child_work_columns"/>
+		from 
+			TB_CHILD_WORK c, 
+			TB_WORK w
+		where 
+			w.ID = c.WORKID 
+			and STAT &lt;&gt; 'D' 
+			and CHILDID = #{childid,jdbcType=BIGINT} 
+		limit 
+			#{page, jdbcType=INTEGER}, #{pagesize, jdbcType=INTEGER}
+	</select>
+	<select id="searchWorkHistory" resultType="com.cd.bbh.parent.mine.model.ChildWork" parameterType="java.util.Map">
+		select
+			<include refid="child_work_columns"/>
+		from 
+			TB_CHILD_WORK c, 
+			TB_WORK w
+		where 
+			w.ID = c.WORKID 
+			and STAT = 'D' 
+			and CHILDID = #{childid,jdbcType=BIGINT} 
+		limit 
+			#{page, jdbcType=INTEGER}, #{pagesize, jdbcType=INTEGER}
+	</select>
+
+	<insert id="insertChildWork" parameterType="java.util.Map">
+		insert into TB_CHILD_WORK (CHILDID, WORKID, CREATEDBY, STAT, COMMENTS)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">  
+		(
+			#{item.childid,jdbcType=BIGINT}, 
+			#{item.workid,jdbcType=BIGINT}, 
+			#{item.createdby,jdbcType=VARCHAR},
+		 	#{item.stat,jdbcType=VARCHAR}, 
+		 	#{item.comments,jdbcType=VARCHAR}
+		 )
+		</foreach>
+	</insert>
+	<update id="updateChildWork" parameterType="java.util.Map">
+		update 
+			TB_CHILD_WORK 
+		set 
+			COMMENTS = #{comments,jdbcType=VARCHAR},
+			STAT = #{stat,jdbcType=VARCHAR},
+			FINISHDATE = #{finishdate,jdbcType=TIMESTAMP},
+			SCORE = #{score,jdbcType=FLOAT}
+		where ID = #{workid, jdbcType=BIGINT}
+	</update>
+	
+	<delete id="removeChildWork" parameterType="java.lang.Long">
+		delete from TB_CHILD_WORK where ID = #{workid, jdbcType=BIGINT}
+	</delete>
+</mapper>

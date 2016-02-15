@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.school.dao.CourseDao">
+	<resultMap id="coursevos" type="com.cd.bbh.parent.school.vo.CourseVO" autoMapping="true">
+		<id column="dayOfWeek" property="dayOfWeek" jdbcType="INTEGER"/>
+		<collection property="coureses" fetchType="eager" javaType="java.util.ArrayList" autoMapping="true" ofType="com.cd.bbh.parent.school.vo.Course" />
+	</resultMap>
+	
+	<select id="searchCourses" resultMap="coursevos" parameterType="java.util.Map">
+		select 
+			case dayofweek(cr.DTBEGIN)  
+				when 1 then '星期日' 
+				when 2 then '星期一' 
+				when 3 then '星期二' 
+				when 4 then '星期三' 
+				when 5 then '星期四'
+				when 6 then '星期五' 
+				when 7 then '星期六' 
+			end 				as dayOfWeek,
+			cr.ID 				as courseId,
+			c.NAME				as courseName,
+			c.REMARK 			as courseComments,
+			c.IMAGEURL			as courseImage,
+			t.NAME				as teacher,
+			cr.DTBEGIN			as date,
+			cr.DTBEGIN			as begin,
+			cr.DTFINISH			as end
+		from 
+			TB_COURSE c,
+			TB_COURSE_RECORD cr,
+			TB_PUPIL p,
+			TB_USER t
+		where 
+			p.CLASSID = cr.CLASSID
+			and t.ID = cr.TEACHERID
+			and cr.COURSEID = c.ID
+			and date_format(#{beginDate,jdbcType=TIMESTAMP},'%Y-%m-%d') &lt;= cr.DTBEGIN
+			and cr.DTBEGIN &lt;= date_format(#{endDate,jdbcType=TIMESTAMP},'%Y-%m-%d')
+			and p.ID = #{child,jdbcType=BIGINT}
+		order by
+			begin asc
+	</select>
+</mapper>

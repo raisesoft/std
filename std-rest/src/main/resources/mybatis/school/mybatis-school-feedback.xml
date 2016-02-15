@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.school.app.dao.SchoolFeedbackDao">
+	<select id="selectFeedbackBySchool" resultType="com.cd.bbh.school.app.vo.Feedback">
+		SELECT 
+    		fb.ID AS id,
+    		fb.FBNAME AS feedName,
+    		fb.INSTRUCTION AS instruction,
+    		fb.DTCREATE AS createDate,
+    		u.NAME AS createUser
+		FROM
+    		TB_FEEDBACK fb
+        JOIN
+    		TB_USER u ON fb.CREATEDBY = u.ID
+    	where fb.SCHOOLID = #{schoolId, jdbcType=BIGINT}
+	</select>
+	<select id="selectFeedbackByTeacher" resultType="com.cd.bbh.school.app.vo.FeedbackVO">
+		SELECT 
+    		fr.ID AS id,
+    		fb.FBNAME AS feedName,
+            t.NAME AS teacher,
+            c.Name AS student,
+    		fb.INSTRUCTION AS instruction,
+    		fr.DTCREATE AS createDate,
+			fr.TCOMMENTS AS teacherComments,
+			fr.PCOMMENTS AS parentComments,
+    		fr.TSTAT AS teacherStat,
+    		fr.PSTAT AS parentStat
+		FROM
+    		TB_FEEDBACK fb
+        JOIN
+    		TB_FEEDBACK_RECORD fr ON fb.ID = fr.TEMPLATEID
+		JOIN 
+			TB_USER t ON fr.CREATEDBY = t.ID
+		JOIN
+    		TB_CHILD c ON c.ID = fr.PUPILID
+		WHERE
+    		fr.CREATEDBY = #{teacherId, jdbcType=BIGINT}
+    	<if test="search.title != null">
+    		AND fb.FBNAME LIKE CONCAT('%', #{search.title, jdbcType=VARCHAR}, '%')
+    	</if>
+    	<if test="search.student != null">
+    		AND c.Name LIKE CONCAT('%', #{search.student, jdbcType=VARCHAR}, '%')
+    	</if>
+    	<if test="search.dataNum > 0">
+    		LIMIT #{search.start} , #{search.dataNum};
+    	</if>
+	</select>
+	<select id="selectFeedbackById" resultType="com.cd.bbh.school.app.vo.Feedback">
+		SELECT 
+    		fb.ID AS id,
+    		fb.FBNAME AS feedName,
+    		fb.INSTRUCTION AS instruction,
+    		fb.DTCREATE AS createDate,
+    		u.NAME AS createUser
+		FROM
+    		TB_FEEDBACK fb
+        JOIN
+    		TB_USER u ON fb.CREATEDBY = u.ID
+    	where fb.ID = #{id, jdbcType=BIGINT}
+	
+	</select>
+	<select id="selectFeedbackItemByFeedBackId" resultType="com.cd.bbh.school.app.vo.FeedbackItem">
+		SELECT 
+    		bi.ID AS id,
+    		bi.SUBJECT AS subject
+		FROM
+    		TB_FEEDBACK_ITEM bi
+    	WHERE 
+    		bi.TEMPLATEID = #{feedbackId, jdbcType=BIGINT}
+    		
+	</select>
+	<select id="selectFeedbackItemByTeacher" resultType="com.cd.bbh.school.app.vo.FeedbackItemVO">
+		SELECT 
+    		fir.ID AS id,
+    		fir.FEEDBACKID AS feedbackId,
+    		fir.TSCORE AS score,
+    		fir.TSTAT AS stat,
+    		fi.SUBJECT AS subject
+		FROM
+    		TB_FEEDBACK_ITEM_RECORD fir
+        JOIN
+    		TB_FEEDBACK_ITEM fi ON fir.FEEDBACKITEMID = fi.id
+        JOIN
+    		TB_FEEDBACK_RECORD fr ON fir.FEEDBACKID = fr.id
+    	JOIN
+    		TB_FEEDBACK f ON fr.TEMPLATEID = f.id
+		WHERE
+			fir.FEEDBACKID in (
+    		<foreach collection="feedbackIds" item="f" separator=",">
+    		#{f}
+    		</foreach>
+    		)
+	</select>
+	<insert id="insertFeedbackItemRecord">			
+		insert into TB_FEEDBACK_ITEM_RECORD(
+			FEEDBACKID,
+			FEEDBACKITEMID,
+			TSCORE,
+			TSTAT)
+		values
+		<foreach collection="firs" item="f" separator=",">
+			(#{f.feedbackId, jdbcType=BIGINT},
+			#{f.feedBackItemId, jdbcType=BIGINT},
+			#{f.score, jdbcType=FLOAT},
+			#{f.stat, jdbcType=VARCHAR})			
+		</foreach>
+	</insert>
+	<insert id="insertFeedbackRecord" useGeneratedKeys="true" keyProperty="fr.id">
+		INSERT INTO TB_FEEDBACK_RECORD(
+			PUPILID,
+			TEMPLATEID,
+			DTCREATE,
+			CREATEDBY,
+			TCOMMENTS,
+			PCOMMENTS,
+			TSTAT,
+			PSTAT)
+		VALUES
+			(#{fr.pupilId, jdbcType=BIGINT},
+			#{fr.templateId, jdbcType=BIGINT},
+			#{fr.createDate, jdbcType=TIMESTAMP},
+			#{fr.createUserId, jdbcType=BIGINT},
+			#{fr.teacherComments, jdbcType=VARCHAR},
+			#{fr.parentComments, jdbcType=VARCHAR},
+			#{fr.teacherStat, jdbcType=VARCHAR},
+			#{fr.parentStat, jdbcType=VARCHAR})
+	</insert>
+
+</mapper>

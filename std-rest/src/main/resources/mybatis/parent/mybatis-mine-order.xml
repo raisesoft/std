@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.mine.dao.OrderDao">
+	<resultMap type="com.cd.bbh.parent.mine.model.Order" id="order" autoMapping="true">
+		<id column="ID" property="orderid" jdbcType="BIGINT" />
+		<collection property="products" fetchType="eager" javaType="java.util.ArrayList" autoMapping="true" ofType="com.cd.bbh.parent.mine.model.ProductOffer" />
+	</resultMap>
+
+	<select id="searchOrders" resultMap="order" parameterType="java.util.Map">
+		select 
+			case po.PRODUCTTYPE
+				when 'C' then (select IMGCARGO from TB_CARGO    where ID = po.PRODUCTID)
+		        when 'A' then (select IMGPOP from TB_OFFER    	where ID = po.PRODUCTID)
+		        when 'D' then (select IMGPATHURL from TB_DEVICE where ID = po.PRODUCTID)
+		        when 'W' then (select IMGPATHURL from TB_WORK   where ID = po.PRODUCTID)
+			end				as imageUrl,
+		    case po.PRODUCTTYPE
+				when 'C' then (select NAME 	from TB_CARGO 	where ID = po.PRODUCTID)
+		        when 'A' then (select NAME 	from TB_OFFER	where ID = po.PRODUCTID)
+		        when 'D' then (select NAME 	from TB_DEVICE 	where ID = po.PRODUCTID)
+		        when 'W' then (select WNAME from TB_WORK   	where ID = po.PRODUCTID)
+			end				as name,
+			po.PRICE		as price,
+			po.AMOUNT		as amount,
+			po.TOTALPRICE	as totalPrice,
+			po.PRODUCTID	as productid,
+			po.PRODUCTTYPE	as productType,
+			o.ID			as orderid,
+			o.CHILDID		as childid,
+			o.SERIALNO		as serialNo,
+		    o.INVOICES		as invoices,
+		    o.PAYCHANNEL	as payChannel,
+		    o.STAT 			as stat,
+		    o.PAYAMOUNT		as sum,
+		    o.DTCREATE		as createDate,
+		    o.CREATEDBY		as createdBy    
+		from 
+			(select 
+				* 
+			from 
+				TB_ORDER 
+			where 
+				CREATEDBY = #{creator,jdbcType=VARCHAR}
+				<if test="childid != null">
+				and	CHILDID = #{childid,jdbcType=BIGINT}
+				</if>
+			limit #{page,jdbcType=INTEGER},#{pagesize,jdbcType=INTEGER}) o  
+		left join TB_PRODUCT_OFFER po on po.ORDERID = o.ID
+	</select>
+	<select id="searchOrder" resultMap="order" parameterType="java.lang.Long">
+		select 
+			case po.PRODUCTTYPE
+				when 'C' then (select IMGCARGO from TB_CARGO    where ID = po.PRODUCTID)
+		        when 'A' then (select IMGPOP from TB_OFFER    	where ID = po.PRODUCTID)
+		        when 'D' then (select IMGPATHURL from TB_DEVICE where ID = po.PRODUCTID)
+		        when 'W' then (select IMGPATHURL from TB_WORK   where ID = po.PRODUCTID)
+			end				as imageUrl,
+		    case po.PRODUCTTYPE
+				when 'C' then (select NAME 	from TB_CARGO 	where ID = po.PRODUCTID)
+		        when 'A' then (select NAME 	from TB_OFFER	where ID = po.PRODUCTID)
+		        when 'D' then (select NAME 	from TB_DEVICE 	where ID = po.PRODUCTID)
+		        when 'W' then (select WNAME from TB_WORK   	where ID = po.PRODUCTID)
+			end				as name,
+			po.PRICE		as price,
+			po.AMOUNT		as amount,
+			po.TOTALPRICE	as totalPrice,
+			po.PRODUCTID	as productid,
+			po.PRODUCTTYPE	as productType,
+			o.ID			as orderid,
+			o.CHILDID		as childid,
+			o.SERIALNO		as serialNo,
+		    o.INVOICES		as invoices,
+		    o.PAYCHANNEL	as payChannel,
+		    o.STAT 			as stat,
+		    o.PAYAMOUNT		as sum,
+		    o.DTCREATE		as createDate,
+		    o.CREATEDBY		as createdBy    
+		from  
+			TB_ORDER o,
+			TB_PRODUCT_OFFER po 
+		where 
+			o.ID = #{orderid,jdbcType=BIGINT}
+			and po.ORDERID = o.ID
+	</select>
+	<delete id="deleteOrder" parameterType="java.lang.Long">
+		delete from TB_PRODUCT_OFFER where ORDERID = #{orderid,jdbcType=BIGINT}
+		delete from TB_ORDER where ID = #{id,jdbcType=BIGINT}
+	</delete>
+	<insert id="insertOrder" parameterType="com.cd.bbh.parent.mine.model.Order" useGeneratedKeys="true" keyProperty="orderid" >
+		insert into TB_ORDER(SERIALNO, STAT, CHILDID, PAYAMOUNT, CREATEDBY)
+		values (
+			#{serialNo,jdbcType=VARCHAR},
+			'W',
+			#{childid,jdbcType=BIGINT},
+			#{sum,jdbcType=NUMERIC},
+			#{createdBy,jdbcType=VARCHAR}
+		)
+	</insert>
+	<insert id="insertProductOffer" parameterType="com.cd.bbh.parent.mine.model.ProductOffer">
+		insert into TB_PRODUCT_OFFER(
+			ORDERID, 
+			PRODUCTTYPE, 
+			PRODUCTID, 
+			AMOUNT, 
+			PRICE, 
+			TOTALPRICE)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">  
+        ( 
+	        #{item.orderid,jdbcType=BIGINT},
+			#{item.productType,jdbcType=VARCHAR},
+			#{item.productid,jdbcType=BIGINT},
+			#{item.amount,jdbcType=INTEGER},
+			#{item.price,jdbcType=NUMERIC},
+			#{item.totalPrice,jdbcType=NUMERIC}
+		)  
+    	</foreach>  
+	</insert>
+</mapper>

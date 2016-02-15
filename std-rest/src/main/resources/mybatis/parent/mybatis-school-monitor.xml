@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cd.bbh.parent.school.dao.MonitorDao">
+
+	<select id="searchCameraInfo" resultType="com.cd.bbh.parent.school.vo.MonitorVO" parameterType="java.util.Map">
+		select
+			c.ID			as id,
+		    c.LOCATION		as location,
+		    c.STAT			as state,
+		    u.NAME			as schoolName,
+		    cl.NAME			as className
+		from 
+			TB_CAMERA c,
+		    TB_PUPIL p,
+		    TB_CLASS cl,
+		    TB_USER u
+		where
+		    ((p.CLASSID=c.CLASSID and p.SCHOOLID = c.SCHOOLID and c.FLAGPUBLIC = 'R') or (p.SCHOOLID = c.SCHOOLID and c.FLAGPUBLIC = 'P'))
+		    and p.SCHOOLID = u.ID
+		    and cl.ID = p.CLASSID
+		    and p.ID = #{child,jdbcType=BIGINT}
+		<if test=" page !=null and pagesize != null">
+			limit #{page, jdbcType=INTEGER}, #{pagesize, jdbcType=INTEGER}
+		</if>
+	</select>
+	
+	<select id="searchCamera" resultType="java.util.Map" parameterType="java.util.Map">
+		select
+			c.SERIALNO		as serialNo,
+		    c.ACCOUNT		as account,
+		    c.PASSWORD		as password
+		from 
+			TB_CAMERA c,
+		    TB_PUPIL_CAMERA pc
+		where
+			pc.CAMERAID = c.ID
+			and pc.EXPIREDATE &gt;= now()
+		    and pc.PUPILID = #{child,jdbcType=BIGINT}
+		    and c.ID = #{camera,jdbcType=BIGINT}
+	</select>
+	
+	<insert id="insertCameraRel" parameterType="java.util.List">
+		insert into TB_PUPIL_CAMERA(
+			CAMERAID,
+			PUPILID,
+			EXPIREDATE)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">  
+        ( 
+	        #{camera,jdbcType=BIGINT},
+			#{pupil,jdbcType=BIGINT},
+			#{expireDate,jdbcType=TIMESTAMP} 
+		)  
+    	</foreach>  
+	</insert>
+</mapper>
